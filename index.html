@@ -106,9 +106,10 @@ body{
   position:relative;z-index:1;
   min-height:100vh;
   display:block;
-  padding:0 1.2rem 6rem;
+  width:100%;
   max-width:520px;
   margin:0 auto;
+  padding:0 1.2rem 6rem;
 }
 
 /* ── HEADER ── */
@@ -484,7 +485,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
   </div>
 </div>
 
-<div id="appContent" style="display:none;min-height:100vh"><div class="app">
+<div id="appContent" style="display:none;position:relative;z-index:1;min-height:100vh"><div class="app">
   <header>
     <div class="eyebrow">30-dňový plán sebaregulácie</div>
     <h1>L<em>e</em>s</h1>
@@ -530,6 +531,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 
 </div><!-- /appContent -->
 
+<button onclick="localStorage.removeItem('les30_start');localStorage.removeItem('les30');location.reload();" 
+  style="position:fixed;bottom:1rem;right:1rem;z-index:50;background:rgba(10,24,13,.8);
+  border:1px solid rgba(90,138,90,.3);color:rgba(168,188,140,.5);
+  font-size:.55rem;letter-spacing:.1em;padding:.3rem .6rem;border-radius:99px;cursor:pointer;">
+  reset
+</button>
+
 <div class="toast" id="toast">✓ Aktivita dokončená</div>
 
 <!-- ── PARALLAX (minimal, no tree building) ── -->
@@ -548,175 +556,126 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 </script>
 
 <script>
+
 const PLAN=[
 {morning:{title:"Múdra myseľ – prvé stretnutie",dur:"6 min",method:"DBT · Vedomá myseľ",desc:"Múdra myseľ je priestor medzi čistou emóciou a čistou logikou. Pri každom nádychu si šepni 'múdra', pri výdychu 'myseľ'. Nechaj prísť odpoveď zvnútra.",type:"breathe"},
-noon:{title:"Prvý spúšťač dňa",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Situácia → Myšlienka → Emócia → Správanie. Dnes zachyť prvý článok reťaze.",type:"journal",prompt:"Situácia, ktorá ma dnes spustila: ___
-Moja automatická myšlienka bola: ___"},
+noon:{title:"Prvý spúšťač dňa",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Situácia → Myšlienka → Emócia → Správanie. Dnes zachyť prvý článok reťaze.",type:"journal",prompt:"Situácia, ktorá ma dnes spustila: ___\nMoja automatická myšlienka bola: ___"},
 evening:{title:"Teplomer impulzov",dur:"5 min",method:"DBT · Škálovanie",desc:"Impulzy majú rôznu intenzitu (0–10). Spoznanie vlastnej škály je prvý krok k regulácii.",type:"slider",label:"Priemerná sila mojich impulzov dnes",left:"Slabé",right:"Veľmi silné"}},
 
 {morning:{title:"STOP – nácvik v pokoji",dur:"5 min",method:"DBT · Znášanie záťaže",desc:"Zastav sa fyzicky. Nadýchni sa (4 sekundy). Pozoruj čo cítiš bez hodnotenia. Konaj vedome. Precvič to teraz, keď je pokoj – aby si ho mala keď príde búrka.",type:"breathe"},
-noon:{title:"Zápisník myšlienok",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Zachyť situáciu a automatickú myšlienku čo najpresnejšie.",type:"journal",prompt:"Situácia: ___
-Automatická myšlienka (prvé čo mi napadlo): ___"},
+noon:{title:"Zápisník myšlienok",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Zachyť situáciu a automatickú myšlienku čo najpresnejšie.",type:"journal",prompt:"Situácia: ___\nAutomatická myšlienka (prvé čo mi napadlo): ___"},
 evening:{title:"Rýchla alebo pomalá cesta",dur:"5 min",method:"Teória životnej histórie",desc:"Rýchla stratégia = okamžitá odmena. Pomalá = investícia. Kde si dnes bola?",type:"choice",question:"Môj prevažujúci spôsob dnes:",options:["Reagovala som automaticky","Urobila som aspoň 1 pauzu","Pauzu som použila vedome","Väčšinou som bola prítomná"]}},
 
 {morning:{title:"Skenovanie tela",dur:"7 min",method:"Všímavosť · MBSR",desc:"Pomaly presuň pozornosť od chodidiel nahor. Kde je napätie? Kde uvoľnenie? Len pozoruj, nemeň.",type:"breathe"},
-noon:{title:"Pomenovanie emócie",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Presné pomenovanie emócie znižuje jej intenzitu až o 50% podľa výskumu. Nie 'zle' – ale 'frustrácia', 'úzkosť', 'nuda'. Buď čo najpresnejšia.",type:"journal",prompt:"Impulz dnes: ___
-Emócia za ním (čo najpresnejšie): ___
-Sila (0–10): ___"},
+noon:{title:"Pomenovanie emócie",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Presné pomenovanie emócie znižuje jej intenzitu až o 50% podľa výskumu. Nie 'zle' – ale 'frustrácia', 'úzkosť', 'nuda'. Buď čo najpresnejšia.",type:"journal",prompt:"Impulz dnes: ___\nEmócia za ním (čo najpresnejšie): ___\nSila (0–10): ___"},
 evening:{title:"Pozorovanie bez hodnotenia",dur:"5 min",method:"DBT · Bez hodnotenia",desc:"Popisuj fakty bez hodnotiacich prídavných mien. 'Reagovala som rýchlo' namiesto 'bola som zlá'. Vyskúšaj na dnešnom príklade.",type:"journal",prompt:"Dnešný moment opísaný BEZ hodnotiacich slov:"}},
 
 {morning:{title:"Dych 4–7–8",dur:"5 min",method:"Dychová technika",desc:"Nádych 4 sekundy – zadrž 7 sekúnd – výdych 8 sekúnd. Aktivuje parasympatický nervový systém rýchlejšie než štandardné dýchanie. 4 cykly.",type:"breathe"},
-noon:{title:"Over si fakty",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Emócie nie vždy zodpovedajú faktom. Prever jednu dnešnú reakciu: zodpovedá emócia skutočným faktom, alebo tvojej interpretácii?",type:"journal",prompt:"Situácia: ___ | Môj pocit: ___
-Skutočné fakty: ___ | Emócia zodpovedá faktom? ___"},
+noon:{title:"Over si fakty",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Emócie nie vždy zodpovedajú faktom. Prever jednu dnešnú reakciu: zodpovedá emócia skutočným faktom, alebo tvojej interpretácii?",type:"journal",prompt:"Situácia: ___ | Môj pocit: ___\nSkutočné fakty: ___ | Emócia zodpovedá faktom? ___"},
 evening:{title:"Impulz alebo vnútorný hlas?",dur:"5 min",method:"DBT · Múdra myseľ",desc:"Impulz je reaktívny a emočný. Vnútorný hlas je pokojný a hlboký. Dnešná rýchla reakcia bola:",type:"choice",question:"Moja dnešná rýchla reakcia bola:",options:["Čistý impulz – oľutovala som ho","Skôr impulz, nie úplne","Ťažko rozlíšiť","Skôr vnútorný hlas – cítila sa správne"]}},
 
-{morning:{title:"Zámer a plán keby–tak",dur:"6 min",method:"KBT · Zámer konania",desc:"'Ak nastane X, urobím Y.' Výskum ukazuje, že táto forma zvyšuje pravdepodobnosť správania o 200–300% oproti samotnému zámeru.",type:"journal",prompt:"Zámer na dnes: ___
-Keby–tak #1: Keby som pocítila ___, urobím ___.
-Keby–tak #2: Keby nastalo ___, urobím ___."},
-noon:{title:"Zámer v praxi",dur:"5 min",method:"KBT · Spätná väzba",desc:"Späť k rannému plánu. Fungoval? Spätná väzba uzatvára učebný cyklus.",type:"journal",prompt:"Môj ranný plán som (ne)použila, pretože...
-Čo by som príšti raz zmenila: ___"},
+{morning:{title:"Zámer a plán keby–tak",dur:"6 min",method:"KBT · Zámer konania",desc:"'Ak nastane X, urobím Y.' Výskum ukazuje, že táto forma zvyšuje pravdepodobnosť správania o 200–300% oproti samotnému zámeru.",type:"journal",prompt:"Zámer na dnes: ___\nKeby–tak #1: Keby som pocítila ___, urobím ___.\nKeby–tak #2: Keby nastalo ___, urobím ___."},
+noon:{title:"Zámer v praxi",dur:"5 min",method:"KBT · Spätná väzba",desc:"Späť k rannému plánu. Fungoval? Spätná väzba uzatvára učebný cyklus.",type:"journal",prompt:"Môj ranný plán som (ne)použila, pretože...\nČo by som príšti raz zmenila: ___"},
 evening:{title:"Prvý týždeň – vzorec",dur:"7 min",method:"DBT · Sledovací denník",desc:"Ešte nehodnotíme zmenu – len mapujeme vzorce.",type:"journal",prompt:"Vzorec, ktorý som tento týždeň spozorovala vo svojom impulzívnom správaní: ___"}},
 
 {morning:{title:"Predĺžený výdych",dur:"5 min",method:"Polyvagálna teória",desc:"Výdych dlhší než nádych stimuluje blúdivý nerv. Nádych 4 sekundy, výdych 6–8 sekúnd. 5 cyklov. Vedecky overená brzdná technika.",type:"breathe"},
-noon:{title:"Dôkazy pre a proti",dur:"6 min",method:"KBT · Denník myšlienok",desc:"Hľadaj dôkazy, ktoré tvoju automatickú myšlienku podporujú, aj také, ktoré ju vyvracajú. Cieľom nie je pozitivita, ale presnosť.",type:"journal",prompt:"Automatická myšlienka: ___
-Dôkazy, ktoré ju podporujú: ___
-Dôkazy, ktoré ju vyvracajú: ___"},
+noon:{title:"Dôkazy pre a proti",dur:"6 min",method:"KBT · Denník myšlienok",desc:"Hľadaj dôkazy, ktoré tvoju automatickú myšlienku podporujú, aj také, ktoré ju vyvracajú. Cieľom nie je pozitivita, ale presnosť.",type:"journal",prompt:"Automatická myšlienka: ___\nDôkazy, ktoré ju podporujú: ___\nDôkazy, ktoré ju vyvracajú: ___"},
 evening:{title:"Priestor slobody",dur:"5 min",method:"Frankl",desc:"Medzi podnetom a reakciou je priestor – v ňom je naša sloboda.",type:"slider",label:"Priestor medzi podnetom a reakciou dnes",left:"Žiadny",right:"Vedomý"}},
 
 {morning:{title:"Plné ponorenie",dur:"6 min",method:"DBT · Všímavosť",desc:"Plne sa ponoriť do prítomnosti. Jedna ranná aktivita bez telefónu – úplne, s celou pozornosťou.",type:"breathe"},
 noon:{title:"List sebe spred týždňa",dur:"6 min",method:"KBT · Pohľad späť",desc:"Pohľad späť odhaľuje pokrok, ktorý nevidíme v reálnom čase.",type:"journal",prompt:"Drahá ja spred 7 dní... (čo si nevedela, čo teraz vieš)"},
-evening:{title:"Konkrétny cieľ za 23 dní",dur:"7 min",method:"KBT · Stanovovanie cieľov",desc:"Nie 'budem lepšia' – konkrétna, merateľná zmena.",type:"journal",prompt:"Za 30 dní by sa zmenilo konkrétne toto: ___
-Podľa čoho spoznám, že sa to zmenilo: ___"}},
+evening:{title:"Konkrétny cieľ za 23 dní",dur:"7 min",method:"KBT · Stanovovanie cieľov",desc:"Nie 'budem lepšia' – konkrétna, merateľná zmena.",type:"journal",prompt:"Za 30 dní by sa zmenilo konkrétne toto: ___\nPodľa čoho spoznám, že sa to zmenilo: ___"}},
 
 {morning:{title:"TIPP – Studená voda",dur:"5 min",method:"DBT · TIPP",desc:"Studená voda na tvár 30 sekúnd. Aktivuje potápačský reflex, spomaľuje srdce o 10–25%. Fyziologický reset nervovej sústavy.",type:"breathe"},
 noon:{title:"Reťaz správania",dur:"7 min",method:"DBT · Analýza reťaze",desc:"Rozober impulzívnu situáciu ako reťaz článkov. Každý článok je bod, kde sa dala zmeniť trasa.",type:"journal",prompt:"Udalosť → Myšlienka → Emócia → Telesný pocit → Správanie → Dôsledok"},
 evening:{title:"Môj najčastejší spúšťač",dur:"5 min",method:"KBT · Mapovanie spúšťačov",desc:"Po týždni pozorovania – čo sa opakuje?",type:"choice",question:"Môj najčastejší spúšťač impulzívnej reakcie:",options:["Nuda alebo prázdnota","Stres a tlak","Napätie vo vzťahoch","Neistota a strach"]}},
 
 {morning:{title:"Zámer s dychom",dur:"5 min",method:"Všímavosť + KBT",desc:"Pri každom výdychu si zopakuj ranný zámer. Nádych = prítomnosť, výdych = zámer. 5 cyklov.",type:"breathe"},
-noon:{title:"Preformulovanie myšlienky",dur:"6 min",method:"KBT · Reštrukturalizácia",desc:"'Vždy robím chyby' → 'Urobila som chybu v tejto situácii'. Presnosť, nie pozitivita.",type:"journal",prompt:"Pôvodná automatická myšlienka: ___
-Preformulovanie (presnejšie): ___"},
+noon:{title:"Preformulovanie myšlienky",dur:"6 min",method:"KBT · Reštrukturalizácia",desc:"'Vždy robím chyby' → 'Urobila som chybu v tejto situácii'. Presnosť, nie pozitivita.",type:"journal",prompt:"Pôvodná automatická myšlienka: ___\nPreformulovanie (presnejšie): ___"},
 evening:{title:"Teplomer vedomia",dur:"4 min",method:"DBT · Sledovanie",desc:"Každodenné meranie zachytáva trendy, ktoré inak nevidíme.",type:"slider",label:"Ako vedomá som bola dnes?",left:"Automatický pilot",right:"Plne prítomná"}},
 
 {morning:{title:"Predstavivosť zvládania",dur:"6 min",method:"KBT · Vizualizácia",desc:"Predstav si situáciu, kde reaguješ impulzívne. Prehraj ju INAK – s pauzou, s voľbou. Mozog neberie rozdiel medzi predstavou a realitou – skutočne tréninguješ.",type:"breathe"},
-noon:{title:"Opačný čin",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Urob opak toho, čo ti emócia hovorí. Chceš uniknúť – priblíž sa. Chceš kričať – hovor ticho.",type:"journal",prompt:"Emócia: ___ | Jej príkaz (čo som chcela): ___
-Opačný čin: ___"},
+noon:{title:"Opačný čin",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Urob opak toho, čo ti emócia hovorí. Chceš uniknúť – priblíž sa. Chceš kričať – hovor ticho.",type:"journal",prompt:"Emócia: ___ | Jej príkaz (čo som chcela): ___\nOpačný čin: ___"},
 evening:{title:"10 dní – kde som?",dur:"6 min",method:"KBT · Pokrok",desc:"Navigácia, nie hodnotenie.",type:"slider",label:"Oproti dňu 1 – vnímam zmenu?",left:"Žiadna",right:"Citeľný posun"}},
 
 {morning:{title:"PROSBA – Fyzická základňa",dur:"6 min",method:"DBT · PROSBA",desc:"Liečba chorôb, Výživa, Vyhýbanie sa látkam, Spánok, Pohyb. Emocionálna regulácia závisí od fyzického stavu. Dnešný ranný zoznam.",type:"choice",question:"Môj fyzický základ dnes ráno:",options:["Dobre som spala (7+ hodín)","Zjedla som niečo výživné","Pohybovala som sa včera","Cítim sa fyzicky v poriadku"]},
-noon:{title:"Surfovanie na vlne túžby",dur:"7 min",method:"DBT · Zvládanie záťaže",desc:"Impulz je ako vlna – príde, dosiahne vrchol a odíde. Nikdy nesiahne na dno, ak na ňu neskočíš.",type:"journal",prompt:"Impulz: ___ | Kde v tele: ___
-Kedy bol najsilnejší: ___ | Čo sa stalo keď som odolala: ___"},
-evening:{title:"Vďačnosť za spomalenie",dur:"5 min",method:"Pozitívna psychológia",desc:"Hľadaj niečo, čo by si zmeškala na autopilote.",type:"journal",prompt:"Dnes som si vďaka spomaleniu všimla...
-Za čo som vďačná: ___"}},
+noon:{title:"Surfovanie na vlne túžby",dur:"7 min",method:"DBT · Zvládanie záťaže",desc:"Impulz je ako vlna – príde, dosiahne vrchol a odíde. Nikdy nesiahne na dno, ak na ňu neskočíš.",type:"journal",prompt:"Impulz: ___ | Kde v tele: ___\nKedy bol najsilnejší: ___ | Čo sa stalo keď som odolala: ___"},
+evening:{title:"Vďačnosť za spomalenie",dur:"5 min",method:"Pozitívna psychológia",desc:"Hľadaj niečo, čo by si zmeškala na autopilote.",type:"journal",prompt:"Dnes som si vďaka spomaleniu všimla...\nZa čo som vďačná: ___"}},
 
 {morning:{title:"Popisovanie bez hodnotenia",dur:"5 min",method:"DBT · Všímavosť",desc:"Pomenuj čo vnímáš slovami, bez hodnotenia. 3 minúty tichého opisovania – len fakty.",type:"breathe"},
-noon:{title:"Hodnoty – môj kompas",dur:"6 min",method:"TAZ · Hodnotová orientácia",desc:"Pomalá stratégia žije podľa hodnôt, nie podľa nálad. Jasné hodnoty sú kompas, keď impulzy tlačia inam.",type:"journal",prompt:"Moje 3 najdôležitejšie hodnoty: 1.___ 2.___ 3.___
-Konala som dnes v súlade? ___"},
+noon:{title:"Hodnoty – môj kompas",dur:"6 min",method:"TAZ · Hodnotová orientácia",desc:"Pomalá stratégia žije podľa hodnôt, nie podľa nálad. Jasné hodnoty sú kompas, keď impulzy tlačia inam.",type:"journal",prompt:"Moje 3 najdôležitejšie hodnoty: 1.___ 2.___ 3.___\nKonala som dnes v súlade? ___"},
 evening:{title:"V súlade s hodnotami",dur:"5 min",method:"TAZ · Hodnoty",desc:"Každodenná reflexia uzatvára medzeru medzi tým, čo chceme a ako žijeme.",type:"slider",label:"Môj deň bol v súlade s mojimi hodnotami",left:"Vôbec nie",right:"Úplne áno"}},
 
 {morning:{title:"Jedna vec naraz",dur:"5 min",method:"DBT · Všímavosť",desc:"Jedna vec naraz, s plnou pozornosťou. Ranná aktivita bez telefónu – úplne prítomná.",type:"breathe"},
 noon:{title:"Navonok a vnútri",dur:"5 min",method:"DBT · Zhoda",desc:"Zhoda vonkajšieho a vnútorného je znak zdravej regulácie. Rýchla stratégia nás niekedy núti maskovať.",type:"choice",question:"Dnes som sa cítila:",options:["Pokojná navonok aj vnútri","Pokojná navonok, napätá vnútri","Napätá navonok aj vnútri","Vedome som spracovala napätie"]},
-evening:{title:"Dar budúcemu ja",dur:"6 min",method:"KBT · Budúce ja",desc:"Spojenie s budúcou verziou seba posilňuje dlhodobú orientáciu.",type:"journal",prompt:"Dnešný dar mojej budúcej verzii: ___
-Čo som urobila, za čo mi poďakuje: ___"}},
+evening:{title:"Dar budúcemu ja",dur:"6 min",method:"KBT · Budúce ja",desc:"Spojenie s budúcou verziou seba posilňuje dlhodobú orientáciu.",type:"journal",prompt:"Dnešný dar mojej budúcej verzii: ___\nČo som urobila, za čo mi poďakuje: ___"}},
 
 {morning:{title:"Ukotvenie 5–4–3–2–1",dur:"6 min",method:"DBT · Ukotvenie",desc:"5 vecí čo VIDÍŠ → 4 čo POČUJEŠ → 3 čo MÔŽEŠ DOTKNÚŤ → 2 čo CÍTIŠ VÔŇOU → 1 CHUŤ. Preruší krúživé myslenie a privedie ťa do prítomnosti.",type:"breathe"},
-noon:{title:"Dôsledky v čase",dur:"6 min",method:"KBT · Časová perspektíva",desc:"Pomalá stratégia má dlhší horizont – tréningom si ho môžeš rozšíriť.",type:"journal",prompt:"Rozhodnutie: ___
-Za týždeň: ___ | Za rok: ___ | Za 5 rokov: ___"},
+noon:{title:"Dôsledky v čase",dur:"6 min",method:"KBT · Časová perspektíva",desc:"Pomalá stratégia má dlhší horizont – tréningom si ho môžeš rozšíriť.",type:"journal",prompt:"Rozhodnutie: ___\nZa týždeň: ___ | Za rok: ___ | Za 5 rokov: ___"},
 evening:{title:"Dlhodobý radar",dur:"5 min",method:"Teória životnej histórie",desc:"Koniec druhého týždňa. Ako dlhý je tvoj myšlienkový horizont dnes?",type:"slider",label:"Môj myšlienkový horizont dnes",left:"Len tento moment",right:"Mesiace dopredu"}},
 
-{morning:{title:"Radikálne prijatie",dur:"7 min",method:"DBT · Znášanie záťaže",desc:"Nie súhlas – uznanie reality takej, aká je, bez boja. Boj zvyšuje utrpenie. Prijatie ho neznásobí.",type:"journal",prompt:"Vec, ktorú odmietam prijať: ___
-Čo by sa zmenilo keby som ju prijala: ___"},
+{morning:{title:"Radikálne prijatie",dur:"7 min",method:"DBT · Znášanie záťaže",desc:"Nie súhlas – uznanie reality takej, aká je, bez boja. Boj zvyšuje utrpenie. Prijatie ho neznásobí.",type:"journal",prompt:"Vec, ktorú odmietam prijať: ___\nČo by sa zmenilo keby som ju prijala: ___"},
 noon:{title:"Najúčinnejší nástroj",dur:"5 min",method:"DBT · Prehľad techník",desc:"Po dvoch týždňoch – ktorá technika ti naozaj fungovala?",type:"choice",question:"Technika, ktorá mi pomohla najviac:",options:["STOP / pauza pred reakciou","Over si fakty","Skenovanie tela / dýchanie","Zápisník / denník myšlienok"]},
-evening:{title:"Malé víťazstvo",dur:"5 min",method:"Pozitívna psychológia",desc:"Mozog sa učí rýchlejšie cez odmenu. Každé malé víťazstvo si zaslúži uznanie.",type:"journal",prompt:"Dnešné malé víťazstvo: ___
-Na seba som hrdá, pretože: ___"}},
+evening:{title:"Malé víťazstvo",dur:"5 min",method:"Pozitívna psychológia",desc:"Mozog sa učí rýchlejšie cez odmenu. Každé malé víťazstvo si zaslúži uznanie.",type:"journal",prompt:"Dnešné malé víťazstvo: ___\nNa seba som hrdá, pretože: ___"}},
 
 {morning:{title:"TIPP – Intenzívny pohyb",dur:"7 min",method:"DBT · TIPP",desc:"7 minút aeróbneho pohybu znižuje kortizol a zvyšuje GABA. Tanec, skákanie, rýchla chôdza.",type:"breathe"},
-noon:{title:"Kritický hlas a súcit",dur:"6 min",method:"KBT · Seba-súcit",desc:"Sebakritika je tiež impulz – rýchla, automatická. Ako by si reagovala, keby toto isté povedala kamarátke?",type:"journal",prompt:"Kritický hlas dnes: ___
-Keby to povedala kamarátka: ___
-Pre seba napíšem: ___"},
+noon:{title:"Kritický hlas a súcit",dur:"6 min",method:"KBT · Seba-súcit",desc:"Sebakritika je tiež impulz – rýchla, automatická. Ako by si reagovala, keby toto isté povedala kamarátke?",type:"journal",prompt:"Kritický hlas dnes: ___\nKeby to povedala kamarátka: ___\nPre seba napíšem: ___"},
 evening:{title:"Seba-súcit",dur:"5 min",method:"Neff · Seba-súcit",desc:"Bez súcitu je sebaregulácia sebatrestanie.",type:"slider",label:"Ako láskavá som bola k sebe dnes?",left:"Veľmi prísna",right:"Veľmi láskavá"}},
 
 {morning:{title:"Pozorovanie myšlienok",dur:"5 min",method:"DBT · Všímavosť",desc:"Myšlienky sú ako oblaky – prichádzajú a odchádzajú. Ty si obloha, nie oblaky.",type:"breathe"},
 noon:{title:"Vzťahové impulzy",dur:"5 min",method:"DBT · Medziľudské vzťahy",desc:"Rýchla stratégia ovplyvňuje vzťahy – potreba okamžitého schválenia, strach z odmietnutia.",type:"choice",question:"Vo vzťahoch dnes som:",options:["Reagovala automaticky na ostatných","Potrebovala okamžité schválenie","Vedome zvolila odpoveď","Bola autentická a pokojná"]},
-evening:{title:"Asertívna komunikácia – príprava",dur:"6 min",method:"DBT · Medziľudské vzťahy",desc:"Opíš, Vyjadri, Trvaj na svojom, Posilni, Všímavo, Sebavedome, Vyjednaj. Premysli situáciu, kde potrebuješ niečo požiadať alebo povedať nie.",type:"journal",prompt:"Situácia kde túto techniku potrebujem: ___
-Opíš fakty: ___ | Vyjadri pocit: ___ | Požiadaj o: ___"}},
+evening:{title:"Asertívna komunikácia – príprava",dur:"6 min",method:"DBT · Medziľudské vzťahy",desc:"Opíš, Vyjadri, Trvaj na svojom, Posilni, Všímavo, Sebavedome, Vyjednaj. Premysli situáciu, kde potrebuješ niečo požiadať alebo povedať nie.",type:"journal",prompt:"Situácia kde túto techniku potrebujem: ___\nOpíš fakty: ___ | Vyjadri pocit: ___ | Požiadaj o: ___"}},
 
-{morning:{title:"Zámer pre vzťah",dur:"5 min",method:"DBT · GIVE",desc:"Jemne, so záujmom, s uznaním, ľahko. Vyber jeden vzťah a vstúp doň s týmto zámerom.",type:"journal",prompt:"Vzťah s týmto zámerom: ___
-Konkrétne čo urobím inak: ___"},
+{morning:{title:"Zámer pre vzťah",dur:"5 min",method:"DBT · GIVE",desc:"Jemne, so záujmom, s uznaním, ľahko. Vyber jeden vzťah a vstúp doň s týmto zámerom.",type:"journal",prompt:"Vzťah s týmto zámerom: ___\nKonkrétne čo urobím inak: ___"},
 noon:{title:"Čas a vedomie",dur:"5 min",method:"Wittmann · Čas",desc:"Keď spomaľujeme, máme pocit väčšieho časového priestoru. Výskum to potvrdzuje.",type:"slider",label:"Ako sa dnes cítil čas?",left:"Utekal",right:"Bol môj"},
-evening:{title:"Tri dôležité veci",dur:"6 min",method:"Eisenhower · Dôležité vs. urgentné",desc:"Rýchla stratégia reaguje na urgentné. Pomalá sa stará o dôležité.",type:"journal",prompt:"Tri dôležité (nie urgentné) veci, ktoré čakajú:
-1.___ 2.___ 3.___"}},
+evening:{title:"Tri dôležité veci",dur:"6 min",method:"Eisenhower · Dôležité vs. urgentné",desc:"Rýchla stratégia reaguje na urgentné. Pomalá sa stará o dôležité.",type:"journal",prompt:"Tri dôležité (nie urgentné) veci, ktoré čakajú:\n1.___ 2.___ 3.___"}},
 
-{morning:{title:"Vážiť výhody a nevýhody",dur:"6 min",method:"DBT · Znášanie záťaže",desc:"Racionálna analýza aktivuje rozumovú myseľ počas emočných búrok. Precvič na príklade.",type:"journal",prompt:"Impulz: ___
-Výhody ak ho poslúchnem: ___ | Nevýhody: ___
-Výhody ak odolám: ___ | Nevýhody: ___"},
+{morning:{title:"Vážiť výhody a nevýhody",dur:"6 min",method:"DBT · Znášanie záťaže",desc:"Racionálna analýza aktivuje rozumovú myseľ počas emočných búrok. Precvič na príklade.",type:"journal",prompt:"Impulz: ___\nVýhody ak ho poslúchnem: ___ | Nevýhody: ___\nVýhody ak odolám: ___ | Nevýhody: ___"},
 noon:{title:"Čo mi dáva dlhodobú energiu",dur:"5 min",method:"TAZ · Hodnoty",desc:"Energie, ktoré pretrvávajú, sú zakotvené v hodnotách, nie v impulzoch.",type:"choice",question:"Čo mi dáva naozaj dlhodobú energiu?",options:["Pohyb a telo","Ticho a príroda","Hlboké vzťahy","Tvorivosť a rast"]},
 evening:{title:"Semeno na zajtrajšok",dur:"5 min",method:"Teória životnej histórie",desc:"Pomalá stratégia sadí stromy. Aké malé semeno zasadíš dnes?",type:"journal",prompt:"Jedna malá vec pre zajtrajšok: ___"}},
 
 {morning:{title:"Budovanie majstrovstva",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Niečo, v čom sa zlepšuješ každý deň. Pocit kompetencie znižuje emocionálnu reaktivitu.",type:"journal",prompt:"Niečo malé, v čom sa dnes zlepším: ___"},
 noon:{title:"Môj les dnes",dur:"5 min",method:"Metafora",desc:"Metafora otvára prístup k vnútornému stavu, ktorý sa ťažko pomenúva priamo.",type:"choice",question:"Môj vnútorný svet dnes je ako:",options:["Pokojný les po daždi","Hmlisté ráno","Vietor v korunách","Jasný slnečný deň"]},
-evening:{title:"Odputovanie od myšlienky",dur:"7 min",method:"TAZ · Odputovanie",desc:"Vzorce, ktoré nám viac neslúžia, môžeme vedome odložiť – nie potlačiť.",type:"journal",prompt:"Vzorec, ktorý nechcem ďalej niesť: ___
-Čo by ho nahradilo: ___"}},
+evening:{title:"Odputovanie od myšlienky",dur:"7 min",method:"TAZ · Odputovanie",desc:"Vzorce, ktoré nám viac neslúžia, môžeme vedome odložiť – nie potlačiť.",type:"journal",prompt:"Vzorec, ktorý nechcem ďalej niesť: ___\nČo by ho nahradilo: ___"}},
 
 {morning:{title:"Tri týždne – múdra myseľ",dur:"7 min",method:"DBT · Múdra myseľ",desc:"Ani čisto emočná, ani čisto racionálna. Hlboká pokojná znalosť seba samej po troch týždňoch.",type:"breathe"},
-noon:{title:"Impulz alebo vnútorný hlas – hlbšie",dur:"6 min",method:"DBT · Múdra myseľ",desc:"Impulz vychádza z emočnej mysle. Vnútorný hlas z múdrej mysle. Po troch týždňoch vieš lepšie rozlíšiť?",type:"journal",prompt:"Impulz dnes: ___ | Emócia: ___
-Vnútorný hlas: ___ | Pocit: ___
-Rozdiel, ktorý vnímam: ___"},
-evening:{title:"Vďaka svojej rýchlosti",dur:"6 min",method:"TAZ · Seba-súcit",desc:"Rýchla stratégia ťa chránila. Bola adaptívna. Môžeš jej poďakovať a zároveň zvoliť inak.",type:"journal",prompt:"Moja rýchlosť mi pomohla keď...
-Ďakujem ti za...
-Teraz volím inak, pretože..."}},
+noon:{title:"Impulz alebo vnútorný hlas – hlbšie",dur:"6 min",method:"DBT · Múdra myseľ",desc:"Impulz vychádza z emočnej mysle. Vnútorný hlas z múdrej mysle. Po troch týždňoch vieš lepšie rozlíšiť?",type:"journal",prompt:"Impulz dnes: ___ | Emócia: ___\nVnútorný hlas: ___ | Pocit: ___\nRozdiel, ktorý vnímam: ___"},
+evening:{title:"Vďaka svojej rýchlosti",dur:"6 min",method:"TAZ · Seba-súcit",desc:"Rýchla stratégia ťa chránila. Bola adaptívna. Môžeš jej poďakovať a zároveň zvoliť inak.",type:"journal",prompt:"Moja rýchlosť mi pomohla keď...\nĎakujem ti za...\nTeraz volím inak, pretože..."}},
 
 {morning:{title:"TIPP – Rytmické dýchanie",dur:"6 min",method:"DBT · TIPP",desc:"5–6 nádychov za minútu aktivuje srdcovú variabilitu – ukazovateľ emocionálnej regulácie. Nádych 5 sekúnd, výdych 5 sekúnd. 6 cyklov.",type:"breathe"},
-noon:{title:"Zmena za tri týždne",dur:"6 min",method:"KBT · Prehľad pokroku",desc:"Len pozorovanie, nie hodnotenie. Čo sa zmenilo?",type:"journal",prompt:"Myšlienky: ___ | Emócie: ___ | Správanie: ___
-Najväčšia zmena: ___"},
+noon:{title:"Zmena za tri týždne",dur:"6 min",method:"KBT · Prehľad pokroku",desc:"Len pozorovanie, nie hodnotenie. Čo sa zmenilo?",type:"journal",prompt:"Myšlienky: ___ | Emócie: ___ | Správanie: ___\nNajväčšia zmena: ___"},
 evening:{title:"Moje nástroje ďalej",dur:"5 min",method:"DBT · Udržanie zmeny",desc:"Ktoré techniky budeš používať aj po skončení?",type:"choice",question:"Beriem si ďalej:",options:["STOP / dýchanie","Zápisník / denník myšlienok","Over si fakty","Surfovanie na vlne / Radikálne prijatie"]}},
 
-{morning:{title:"Tri veci vďačnosti",dur:"5 min",method:"Pozitívna psychológia",desc:"Konkrétnosť je kľúčová – nie 'rodina', ale konkrétny moment.",type:"journal",prompt:"3 konkrétne veci za ktoré som dnes vďačná:
-1.___ 2.___ 3.___"},
+{morning:{title:"Tri veci vďačnosti",dur:"5 min",method:"Pozitívna psychológia",desc:"Konkrétnosť je kľúčová – nie 'rodina', ale konkrétny moment.",type:"journal",prompt:"3 konkrétne veci za ktoré som dnes vďačná:\n1.___ 2.___ 3.___"},
 noon:{title:"Budúcnosť je živá",dur:"5 min",method:"KBT · Orientácia na budúcnosť",desc:"Pomalá stratégia má živý vzťah s budúcnosťou – nie abstrakciu.",type:"slider",label:"Budúcnosť je pre mňa dnes",left:"Vzdialená, hmlistá",right:"Konkrétna, živá"},
 evening:{title:"List sebe za rok",dur:"8 min",method:"KBT · List budúcemu ja",desc:"Čo chceš, aby o tomto období vedela tvoja verzia za rok?",type:"journal",prompt:"Drahá ja za rok..."}},
 
 {morning:{title:"Prijatie aj zmena",dur:"6 min",method:"DBT · Dialektika",desc:"'Prijímaš sa taká aká si A chceš sa zmeniť.' Obe pravdy súčasne. 3 nádychy s prijatím, 3 so zámerom.",type:"breathe"},
-noon:{title:"Čo si nesiem ďalej",dur:"6 min",method:"TAZ · Záväzok",desc:"Záväzok je smer, nie sľub dokonalosti.",type:"journal",prompt:"Nesiem si: ___ | Nechávam tu: ___
-Môj smer: ___"},
-evening:{title:"Les – vtedy a teraz",dur:"6 min",method:"Naratívna reflexia",desc:"Záverečná metafora vnútorného priestoru.",type:"journal",prompt:"Na začiatku bol môj vnútorný les...
-Dnes je...
-Zmenilo sa: ___"}},
+noon:{title:"Čo si nesiem ďalej",dur:"6 min",method:"TAZ · Záväzok",desc:"Záväzok je smer, nie sľub dokonalosti.",type:"journal",prompt:"Nesiem si: ___ | Nechávam tu: ___\nMôj smer: ___"},
+evening:{title:"Les – vtedy a teraz",dur:"6 min",method:"Naratívna reflexia",desc:"Záverečná metafora vnútorného priestoru.",type:"journal",prompt:"Na začiatku bol môj vnútorný les...\nDnes je...\nZmenilo sa: ___"}},
 
-{morning:{title:"Posledná pätica",dur:"5 min",method:"TAZ · Zámer",desc:"Nie 'budem dokonalá' – 'budem smerovať k...' Zámer je smer.",type:"journal",prompt:"Posledných 5 dní smerujem k: ___
-Jeden spôsob ako: ___"},
+{morning:{title:"Posledná pätica",dur:"5 min",method:"TAZ · Zámer",desc:"Nie 'budem dokonalá' – 'budem smerovať k...' Zámer je smer.",type:"journal",prompt:"Posledných 5 dní smerujem k: ___\nJeden spôsob ako: ___"},
 noon:{title:"Voľba alebo reaktivita",dur:"5 min",method:"Teória životnej histórie + DBT",desc:"Základná premisa: viac voľby v reakciách, menej automatiky.",type:"slider",label:"Mám viac voľby ako pred 25 dňami?",left:"Rovnako ako predtým",right:"Oveľa viac"},
 evening:{title:"Udržateľnosť",dur:"5 min",method:"DBT · Udržanie zmeny",desc:"Udržateľnosť, nie hrdinstvo. Čo dokážeš robiť každý deň?",type:"choice",question:"Toto zvládnem robiť každý deň:",options:["Ranné dýchanie (2–5 min)","Krátky zápisník","Pauza pred reakciami","Večerná vďačnosť"]}},
 
 {morning:{title:"Postupné uvoľňovanie svalov",dur:"7 min",method:"PMR · Jacobson",desc:"Napni svalovú skupinu 5 sekúnd, uvoľni. Chodidlá → lýtka → stehná → brucho → ruky → ramená → tvár. Fyzická verzia 'pusti to'.",type:"breathe"},
-noon:{title:"Odkaz budúcim začiatkom",dur:"6 min",method:"KBT · Pohľad späť",desc:"Keby si začínala znova – čo by si robila inak?",type:"journal",prompt:"Budúcej sebe začínajúcej podobný proces:
-___
-Najdôležitejšia vec: ___"},
+noon:{title:"Odkaz budúcim začiatkom",dur:"6 min",method:"KBT · Pohľad späť",desc:"Keby si začínala znova – čo by si robila inak?",type:"journal",prompt:"Budúcej sebe začínajúcej podobný proces:\n___\nNajdôležitejšia vec: ___"},
 evening:{title:"Pred záverom",dur:"6 min",method:"Reflexia",desc:"Pomenúvaj presne, bez hodnotenia.",type:"slider",label:"Cítim sa pred záverom",left:"Rovnako ako vždy",right:"Hlboko odlišne"}},
 
 {morning:{title:"Konaj účinne",dur:"5 min",method:"DBT · Všímavosť",desc:"Rob to, čo funguje v danej situácii – nie to čo je 'správne'. Nechaj ego bokom, konaj v prospech skutočného cieľa.",type:"breathe"},
-noon:{title:"Môj záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru, keď sa stratíš.",type:"journal",prompt:"Každý deň budem ___.
-Keď sa stratím, vrátim sa k ___.
-Robím to pretože: ___."},
+noon:{title:"Môj záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru, keď sa stratíš.",type:"journal",prompt:"Každý deň budem ___.\nKeď sa stratím, vrátim sa k ___.\nRobím to pretože: ___."},
 evening:{title:"Dnešný les",dur:"5 min",method:"Metafora",desc:"Každý deň je iný – aj v lese.",type:"choice",question:"Dnešný vnútorný les:",options:["Pokojný a hlboký","Pohyblivý, premenlivý","Hmlistý, nejasný","Otvorený a svetlý"]}},
 
-{morning:{title:"Hromadenie príjemného",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Vedome plánuj príjemné aktivity – nie len čakaj na ne.",type:"journal",prompt:"7 malých príjemných vecí na ďalší týždeň:
-Po:___ Ut:___ St:___ Šv:___ Pi:___ So:___ Ne:___"},
-noon:{title:"Reťazenie návykov",dur:"5 min",method:"Behaviorálna psychológia",desc:"'Po X vždy Y.' Naviazanie nového správania na existujúci zvyk zvyšuje úspešnosť o 80%.",type:"journal",prompt:"Reťaz #1: Po ___ vždy ___.
-Reťaz #2: Keď pocítim ___, vždy ___."},
+{morning:{title:"Hromadenie príjemného",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Vedome plánuj príjemné aktivity – nie len čakaj na ne.",type:"journal",prompt:"7 malých príjemných vecí na ďalší týždeň:\nPo:___ Ut:___ St:___ Šv:___ Pi:___ So:___ Ne:___"},
+noon:{title:"Reťazenie návykov",dur:"5 min",method:"Behaviorálna psychológia",desc:"'Po X vždy Y.' Naviazanie nového správania na existujúci zvyk zvyšuje úspešnosť o 80%.",type:"journal",prompt:"Reťaz #1: Po ___ vždy ___.\nReťaz #2: Keď pocítim ___, vždy ___."},
 evening:{title:"Dlhý pohľad",dur:"6 min",method:"Teória životnej histórie",desc:"Pomalá stratégia je o dlhom pohľade.",type:"slider",label:"Môj pohľad na seba a budúcnosť",left:"Krátky, reaktívny",right:"Dlhý, zámerný"}},
 
 {morning:{title:"Posledné ráno",dur:"6 min",method:"Múdra myseľ + ticho",desc:"Bez plánu, bez zámeru. Len byť. Les nerastie pretože sa snaží – rastie pretože je.",type:"breathe"},
-noon:{title:"Čo mi trvá zmeniť",dur:"6 min",method:"KBT · Úprimný pohľad",desc:"Čestnosť o pretrvávajúcich vzorcoch je základ ďalšej práce.",type:"journal",prompt:"Vzorec, ktorý pretrváva: ___
-Prečo je taký tvrdý: ___
-Môj ďalší krok: ___"},
+noon:{title:"Čo mi trvá zmeniť",dur:"6 min",method:"KBT · Úprimný pohľad",desc:"Čestnosť o pretrvávajúcich vzorcoch je základ ďalšej práce.",type:"journal",prompt:"Vzorec, ktorý pretrváva: ___\nPrečo je taký tvrdý: ___\nMôj ďalší krok: ___"},
 evening:{title:"Celková zmena",dur:"5 min",method:"Záverečná reflexia",desc:"Posledné meranie.",type:"slider",label:"Celková zmena za 29 dní",left:"Rovnako ako na začiatku",right:"Výrazná zmena"}},
 
-{morning:{title:"30 dní – brána ostáva otvorená",dur:"8 min",method:"Integrácia",desc:"Posledný deň nie je koniec – je bod, kde sa zastavuješ a pozrieš späť. Les bol tu pred tebou a bude tu aj po. Napíš, čo si našla.",type:"journal",prompt:"30 dní v lese ma naučilo...
-Najdôležitejšia vec, ktorú som objavila o sebe: ...
-Smer, ktorým idem ďalej: ..."},
-noon:{title:"Záverečný záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru.",type:"journal",prompt:"Každý deň budem ___.
-Keď sa stratím, vrátim sa k ___.
-Robím to pretože mi na tom záleží: ___."},
+{morning:{title:"30 dní – brána ostáva otvorená",dur:"8 min",method:"Integrácia",desc:"Posledný deň nie je koniec – je bod, kde sa zastavuješ a pozrieš späť. Les bol tu pred tebou a bude tu aj po. Napíš, čo si našla.",type:"journal",prompt:"30 dní v lese ma naučilo...\nNajdôležitejšia vec, ktorú som objavila o sebe: ...\nSmer, ktorým idem ďalej: ..."},
+noon:{title:"Záverečný záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru.",type:"journal",prompt:"Každý deň budem ___.\nKeď sa stratím, vrátim sa k ___.\nRobím to pretože mi na tom záleží: ___."},
 evening:{title:"Záverečné slovo",dur:"10 min",method:"",desc:"Posledná strana. Napíš čokoľvek – sebe, tomuto procesu, tejto verzii seba. Bez pravidiel.",type:"journal",prompt:"Záverečné slovo..."}}
 ];
 
