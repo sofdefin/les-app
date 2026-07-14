@@ -3,613 +3,551 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Les – 30-dňový plán</title>
+<title>Les — 30-dňový plán sebaregulácie</title>
 <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
-/* ── KEYFRAMES ────────────────────────────────────────────── */
-@keyframes rayAnim   { 0%,100%{opacity:1} 50%{opacity:0.35} }
-@keyframes partFloat {
-  0%   { opacity:0; transform:translateY(0) translateX(0) rotate(0deg); }
-  15%  { opacity:0.7; }
-  85%  { opacity:0.4; }
-  100% { opacity:0; transform:translateY(-180px) translateX(var(--drift,40px)) rotate(360deg); }
-}
-@keyframes fogDrift  { 0%,100%{transform:scaleX(1) translateX(0)} 50%{transform:scaleX(1.04) translateX(-1%)} }
-@keyframes glowPulse { 0%,100%{opacity:1;box-shadow:0 0 5px #E8A020} 50%{opacity:0.35;box-shadow:0 0 2px #E8A020} }
-@keyframes cardIn    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-@keyframes ringPulse { 0%,100%{box-shadow:0 0 4px rgba(232,160,32,.4)} 50%{box-shadow:0 0 10px rgba(232,160,32,.8)} }
-@keyframes adGlow    { 0%,100%{text-shadow:0 0 30px rgba(232,160,32,.3)} 50%{text-shadow:0 0 60px rgba(232,160,32,.7)} }
-
-/* ── BASE ─────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
-html { scroll-behavior:smooth }
-body {
-  background: #06100A;
-  color: #EEE0B8;
-  font-family: 'Lato', sans-serif;
-  font-weight: 300;
-  min-height: 100vh;
-  overflow-x: hidden;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh}
+body{
+  background:#07120A;
+  color:#EDE0B4;
+  font-family:'Lato',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
 }
 
-/* ── FOREST STAGE ─────────────────────────────────────────── */
-#forestStage {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
+/* ── KEYFRAMES ── */
+@keyframes sway{0%,100%{transform:rotate(-0.4deg)}50%{transform:rotate(0.4deg)}}
+@keyframes rayPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes fogDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(-2%)}}
+@keyframes leafFloat{
+  0%{opacity:0;transform:translate(0,0) rotate(0deg)}
+  10%{opacity:0.7}
+  90%{opacity:0.3}
+  100%{opacity:0;transform:translate(var(--lx,30px),-160px) rotate(480deg)}
+}
+@keyframes fireflyBlink{0%,100%{opacity:0.9;transform:scale(1)}50%{opacity:0.2;transform:scale(0.6)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ringPulse{0%,100%{box-shadow:0 0 4px rgba(220,155,25,.4)}50%{box-shadow:0 0 9px rgba(220,155,25,.8)}}
+@keyframes ringBreath{0%,100%{transform:scale(1);border-color:rgba(180,195,140,.3)}50%{transform:scale(1.45);border-color:rgba(220,155,25,.65)}}
+@keyframes expandRing{to{transform:scale(1.45);border-color:rgba(220,155,25,.65)}}
+
+/* ── FOREST STAGE (fixed, behind everything) ── */
+#stage{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;overflow:hidden;
+  /* Force GPU compositing for smooth parallax */
+  transform:translateZ(0);
 }
 
-/* Sky: deep night gradient with warm horizon glow */
-#fSky {
-  position: absolute;
-  inset: 0;
+/* Sky */
+#sky{
+  position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 60% 38% at 50% 60%,
-      rgba(180,120,20,0.16) 0%, transparent 70%),
-    radial-gradient(ellipse 90% 50% at 50% 100%,
-      rgba(18,50,24,0.95) 0%, transparent 65%),
-    linear-gradient(180deg,
-      #030A07 0%,
-      #060F0A 20%,
-      #071510 45%,
-      #0A1E12 70%,
-      #0C2416 100%
-    );
+    radial-gradient(ellipse 55% 35% at 50% 58%, rgba(160,105,15,.18) 0%, transparent 65%),
+    linear-gradient(180deg, #030809 0%, #060F0B 22%, #091610 50%, #0B1E13 78%, #0D2416 100%);
 }
 
-/* Rays container */
-#fRays {
-  position: absolute;
-  inset: 0;
+/* Light rays – pure CSS, no JS */
+#rays{position:absolute;inset:0;overflow:hidden}
+#rays span{
+  position:absolute;top:0;
+  transform-origin:top center;
+  border-radius:99px;
+  animation:rayPulse var(--d,8s) ease-in-out var(--dl,0s) infinite;
 }
 
-/* Tree layers – each absolutely at bottom, flex row */
-#fl1,#fl2,#fl3,#fl4,#fl5 {
-  position: absolute;
-  bottom: 0;
-  left: -3%;
-  right: -3%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  will-change: transform;
-  transition: transform 0.12s ease-out;
+/* Tree layers – each a fixed bottom strip with inline SVG */
+.tl{
+  position:absolute;bottom:0;left:0;right:0;
+  line-height:0;
+  transform-origin:bottom center;
+  transition:transform .1s linear;
+  overflow:visible;
+}
+/* Mobile: ensure trees are tall enough to be visible */
+@media(max-width:768px){
+  #tl1{height:18vh!important}
+  #tl2{height:30vh!important}
+  #tl3{height:42vh!important}
+  #tl4{height:55vh!important}
+  #tl5{height:38vh!important}
 }
 
-/* Ground fog – soft, animated */
-#fFog {
-  position: absolute;
-  bottom: 0;
-  left: -10%;
-  right: -10%;
-  height: 180px;
-  background: linear-gradient(0deg,
-    rgba(6,16,10,1) 0%,
-    rgba(8,20,12,0.85) 25%,
-    rgba(10,24,14,0.5) 55%,
-    transparent 100%
-  );
-  animation: fogDrift 20s ease-in-out infinite;
+/* Fog */
+#fog{
+  position:absolute;bottom:0;left:-5%;right:-5%;
+  height:200px;
+  background:linear-gradient(0deg, rgba(7,18,10,.98) 0%, rgba(8,20,12,.7) 35%, transparent 100%);
+  animation:fogDrift 22s ease-in-out infinite;
 }
 
-/* Particle layer */
-#fParticles {
-  position: absolute;
-  inset: 0;
+/* Floating leaves */
+.leaf{
+  position:absolute;
+  width:5px;height:5px;
+  border-radius:40% 0 40% 0;
+  background:rgba(120,175,70,.55);
+  animation:leafFloat var(--ld,12s) ease-in-out var(--ll,0s) infinite;
 }
 
-/* ── APP CONTENT ──────────────────────────────────────────── */
-.app {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 1.2rem 8rem;
+/* Fireflies */
+.ff{
+  position:absolute;
+  width:4px;height:4px;
+  border-radius:50%;
+  background:#DCB82A;
+  box-shadow:0 0 5px #DCB82A;
+  animation:fireflyBlink var(--fd,3s) ease-in-out var(--fl,0s) infinite;
 }
 
-/* ── HEADER ───────────────────────────────────────────────── */
-header {
-  width: 100%;
-  max-width: 520px;
-  text-align: center;
-  padding: 3.5rem 0 2rem;
+/* ── APP LAYOUT ── */
+.app{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:block;
+  padding:0 1.2rem 6rem;
+  max-width:520px;
+  margin:0 auto;
 }
 
-.eyebrow {
-  font-size: 0.62rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #6B9E6B;
-  margin-bottom: 0.8rem;
+/* ── HEADER ── */
+header{
+  width:100%;
+  text-align:center;
+  padding:2.5rem 0 1.2rem;
 }
-
-header h1 {
-  font-family: 'IM Fell English', serif;
-  font-size: 5.5rem;
-  font-weight: 400;
-  color: #EEE0B8;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-  text-shadow:
-    0 0 40px rgba(232,160,32,0.4),
-    0 2px 60px rgba(232,160,32,0.2);
+.eyebrow{
+  font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
+  color:#5A8A5A;margin-bottom:.8rem;
 }
-
-header h1 em {
-  font-style: italic;
-  color: #F4D878;
+header h1{
+  font-family:'IM Fell English',serif;
+  font-size:5.5rem;font-weight:400;
+  color:#EDE0B4;letter-spacing:.18em;line-height:1;
+  margin-bottom:.5rem;
+  text-shadow:0 0 50px rgba(220,155,25,.45),0 0 100px rgba(220,155,25,.2);
 }
-
-.sub {
-  font-size: 0.65rem;
-  color: #4A7A4A;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+@media(max-width:768px){
+  header h1{font-size:4rem}
 }
+header h1 em{font-style:italic;color:#F2D060}
+.sub{font-size:.65rem;color:#3D6A3D;letter-spacing:.14em;text-transform:uppercase}
 
 /* Branch divider */
-.branch-div {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto 1.5rem;
-  display: flex;
-  justify-content: center;
-}
+.bdiv{width:100%;margin:0 auto 1.5rem;display:flex;justify-content:center;opacity:.4}
 
-/* ── META ─────────────────────────────────────────────────── */
-.meta {
-  width: 100%;
-  max-width: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.2rem;
-  padding: 0 0.2rem;
+/* ── META BAR ── */
+.meta{
+  width:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.2rem;padding:0 .2rem;
 }
+.meta-t{display:flex;align-items:center;gap:.5rem;font-size:.68rem;color:#A8BC8C;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+.dot{width:6px;height:6px;border-radius:50%;background:#DCB82A;animation:fireflyBlink 3s ease-in-out infinite}
+.meta-d{font-family:'IM Fell English',serif;font-size:.9rem;color:#A8BC8C;font-style:italic}
 
-.meta-t {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.68rem;
-  color: #B8C9A0;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.65;
+/* ── NOTIF STRIP ── */
+.notif{
+  width:100%;
+  background:rgba(10,24,13,.75);
+  border:1px solid rgba(90,138,90,.18);
+  border-radius:12px;padding:.85rem 1.2rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  margin-bottom:1.4rem;backdrop-filter:blur(6px);
 }
-
-.firefly {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #E8A020;
-  animation: glowPulse 3s ease-in-out infinite;
+.notif-lbl{font-size:.75rem;color:#A8BC8C;line-height:1.5}
+.notif-lbl strong{display:block;font-family:'IM Fell English',serif;font-size:.85rem;font-weight:400;color:#EDE0B4;margin-bottom:.1rem}
+.nbtn{
+  flex-shrink:0;background:none;
+  border:1px solid rgba(220,155,25,.35);color:#DCB82A;
+  font-family:'Lato',sans-serif;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.4rem .9rem;border-radius:99px;cursor:pointer;transition:all .2s;white-space:nowrap;
 }
+.nbtn:hover{background:rgba(220,155,25,.08)}
+.nbtn.ok{border-color:#3D6A3D;color:#3D6A3D;cursor:default}
 
-.meta-d {
-  font-family: 'IM Fell English', serif;
-  font-size: 0.9rem;
-  color: #B8C9A0;
-  font-style: italic;
+/* ── PROGRESS ── */
+.prog{width:100%;margin-bottom:2rem}
+.prog-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem}
+.prog-lbl{font-family:'IM Fell English',serif;font-size:.88rem;font-style:italic;color:#A8BC8C;opacity:.65}
+.prog-cnt{font-size:.62rem;color:#DCB82A;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+.prog-track{height:2px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden;margin-bottom:.75rem}
+.prog-fill{height:100%;background:linear-gradient(90deg,#3D6A3D,#DCB82A);border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.rings{display:flex;gap:4px;flex-wrap:wrap}
+.ring{width:10px;height:10px;border-radius:50%;border:1px solid rgba(90,138,90,.22);transition:all .5s}
+.ring.done{background:#3D6A3D;border-color:#3D6A3D}
+.ring.now{border-color:#DCB82A;animation:ringPulse 2.5s ease-in-out infinite}
+
+/* ── CARD ── */
+.card{
+  width:100%;
+  background:linear-gradient(158deg,rgba(13,30,16,.9) 0%,rgba(7,15,9,.93) 100%);
+  border:1px solid rgba(168,188,140,.13);
+  border-radius:16px;padding:1.8rem 1.7rem 1.6rem;
+  position:relative;overflow:hidden;
+  animation:cardIn .5s cubic-bezier(.4,0,.2,1) both;
+  backdrop-filter:blur(8px);
 }
-
-/* ── NOTIF ────────────────────────────────────────────────── */
-.notif {
-  width: 100%;
-  max-width: 520px;
-  background: rgba(12,28,14,0.75);
-  border: 1px solid rgba(107,158,107,0.18);
-  border-radius: 12px;
-  padding: 0.85rem 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.4rem;
-  backdrop-filter: blur(6px);
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(168,188,140,.25),rgba(220,155,25,.42),rgba(168,188,140,.25),transparent);
 }
-
-.notif-lbl {
-  font-size: 0.75rem;
-  color: #B8C9A0;
-  line-height: 1.5;
-}
-.notif-lbl strong {
-  display: block;
-  color: #EEE0B8;
-  font-family: 'IM Fell English', serif;
-  font-size: 0.85rem;
-  font-weight: 400;
-  margin-bottom: 0.1rem;
-}
-
-.notif-btn {
-  flex-shrink: 0;
-  background: none;
-  border: 1px solid rgba(232,160,32,0.35);
-  color: #E8A020;
-  font-family: 'Lato', sans-serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 0.4rem 0.9rem;
-  border-radius: 99px;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.notif-btn:hover { background: rgba(232,160,32,0.08); }
-.notif-btn.ok { border-color: #4A7A4A; color: #4A7A4A; cursor: default; }
-
-/* ── PROGRESS ─────────────────────────────────────────────── */
-.prog {
-  width: 100%;
-  max-width: 520px;
-  margin-bottom: 2rem;
-}
-
-.prog-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 0.5rem;
-}
-
-.prog-lbl {
-  font-family: 'IM Fell English', serif;
-  font-size: 0.88rem;
-  font-style: italic;
-  color: #B8C9A0;
-  opacity: 0.65;
-}
-
-.prog-cnt {
-  font-size: 0.62rem;
-  color: #E8A020;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.6;
-}
-
-.prog-track {
-  height: 2px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 99px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.prog-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4A7A4A, #E8A020);
-  border-radius: 99px;
-  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
-}
-
-.rings { display: flex; gap: 4px; flex-wrap: wrap; }
-
-.ring {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  border: 1px solid rgba(107,158,107,0.22);
-  transition: all 0.5s;
-}
-.ring.done  { background: #4A7A4A; border-color: #4A7A4A; }
-.ring.active { border-color: #E8A020; animation: ringPulse 2.5s ease-in-out infinite; }
-
-/* ── CARD ─────────────────────────────────────────────────── */
-.card {
-  width: 100%;
-  max-width: 520px;
-  background: linear-gradient(160deg, rgba(15,36,18,0.88) 0%, rgba(8,18,10,0.92) 100%);
-  border: 1px solid rgba(184,201,160,0.13);
-  border-radius: 16px;
-  padding: 1.8rem 1.7rem 1.6rem;
-  position: relative;
-  overflow: hidden;
-  animation: cardIn 0.55s cubic-bezier(0.4,0,0.2,1) both;
-  backdrop-filter: blur(8px);
-}
-
-.card::before {
-  content:'';
-  position:absolute;
-  bottom:0;left:15%;right:15%;
-  height:90px;
-  background:radial-gradient(ellipse at bottom,rgba(232,160,32,0.06) 0%,transparent 70%);
+.card::after{
+  content:'';position:absolute;bottom:0;left:15%;right:15%;height:80px;
+  background:radial-gradient(ellipse at bottom,rgba(220,155,25,.055) 0%,transparent 70%);
   pointer-events:none;
 }
 
-.card::after {
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:2px;
-  background:linear-gradient(90deg,
-    transparent 0%,rgba(184,201,160,0.25) 20%,
-    rgba(232,160,32,0.45) 50%,
-    rgba(184,201,160,0.25) 80%,transparent 100%
-  );
-}
+.sbadge{display:inline-flex;align-items:center;gap:.4rem;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#DCB82A;margin-bottom:1rem;opacity:.7}
+.sbadge::before{content:'';display:block;width:18px;height:1px;background:linear-gradient(90deg,transparent,#DCB82A)}
 
-.slot-badge {
-  display:inline-flex;align-items:center;gap:0.4rem;
-  font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;
-  color:#E8A020;margin-bottom:1rem;opacity:0.7;
-}
-.slot-badge::before { content:'';display:block;width:20px;height:1px;background:linear-gradient(90deg,transparent,#E8A020); }
+.card h2{font-family:'IM Fell English',serif;font-size:1.62rem;font-weight:400;color:#EDE0B4;line-height:1.25;margin-bottom:.3rem}
+.card-dur{font-size:.65rem;color:#DCB82A;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.8rem;opacity:.55}
+.mtag{display:inline-block;font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;color:#5A8A5A;background:rgba(35,90,38,.15);border:1px solid rgba(35,90,38,.28);border-radius:99px;padding:.2rem .62rem;margin-bottom:.85rem}
+.card-desc{font-size:.85rem;line-height:1.82;color:#A8BC8C;margin-bottom:1.4rem;font-weight:300}
 
-.card h2 {
-  font-family:'IM Fell English',serif;
-  font-size:1.65rem;font-weight:400;
-  color:#EEE0B8;line-height:1.25;
-  margin-bottom:0.3rem;
-}
+/* ── INTERACTIVE ── */
+.ix{background:rgba(4,10,5,.65);border:1px solid rgba(90,138,90,.12);border-radius:11px;padding:1.2rem 1.1rem;margin-bottom:1.3rem}
+.ixlbl{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#DCB82A;margin-bottom:.75rem;opacity:.6}
 
-.card-dur { font-size:0.65rem;color:#E8A020;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.85rem;opacity:0.55; }
-
-.method-tag {
-  display:inline-block;font-size:0.58rem;letter-spacing:0.13em;text-transform:uppercase;
-  color:#6B9E6B;background:rgba(42,107,46,0.15);
-  border:1px solid rgba(42,107,46,0.28);border-radius:99px;
-  padding:0.22rem 0.65rem;margin-bottom:0.9rem;
-}
-
-.card-desc { font-size:0.86rem;line-height:1.82;color:#B8C9A0;margin-bottom:1.4rem;font-weight:300; }
-
-/* ── INTERACTIVE ZONES ────────────────────────────────────── */
-.ix {
-  background:rgba(4,10,5,0.6);
-  border:1px solid rgba(107,158,107,0.12);
-  border-radius:11px;
-  padding:1.2rem 1.1rem;
-  margin-bottom:1.3rem;
-}
-
-.ix-lbl { font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:#E8A020;margin-bottom:0.75rem;opacity:0.6; }
-
-textarea {
-  width:100%;background:transparent;border:none;
-  border-bottom:1px solid rgba(184,201,160,0.18);
-  color:#EEE0B8;font-family:'Lato',sans-serif;
-  font-size:0.84rem;font-weight:300;line-height:1.8;
-  resize:none;outline:none;padding:0.2rem 0 0.5rem;min-height:84px;
-}
-textarea::placeholder { color:rgba(184,201,160,0.25); }
+textarea{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(168,188,140,.18);color:#EDE0B4;font-family:'Lato',sans-serif;font-size:.84rem;font-weight:300;line-height:1.8;resize:none;outline:none;padding:.2rem 0 .5rem;min-height:84px}
+textarea::placeholder{color:rgba(168,188,140,.25)}
 
 /* Breathe */
-.bwrap { display:flex;flex-direction:column;align-items:center;gap:1.1rem;padding:0.3rem 0; }
-
-.bring {
-  width:82px;height:82px;border-radius:50%;
-  border:1px solid rgba(184,201,160,0.28);
-  display:flex;align-items:center;justify-content:center;
-  position:relative;
-  transition:transform 4s ease-in-out,border-color 3s ease;
-}
-.bring::before {
-  content:'';position:absolute;inset:10px;border-radius:50%;
-  background:radial-gradient(circle,rgba(232,160,32,0.1) 0%,transparent 70%);
-  transition:all 4s ease-in-out;
-}
-.bring.ex { transform:scale(1.48);border-color:rgba(232,160,32,0.6); }
-.bring.ex::before { inset:4px;background:radial-gradient(circle,rgba(232,160,32,0.22) 0%,transparent 70%); }
-
-.bword { font-family:'IM Fell English',serif;font-size:0.78rem;font-style:italic;color:#B8C9A0;z-index:1; }
-.binstr { font-size:0.72rem;color:#4A7A4A;text-align:center;min-height:1.3em; }
-
-.bstart {
-  background:none;border:1px solid rgba(107,158,107,0.38);color:#4A7A4A;
-  font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;
-  padding:0.45rem 1.3rem;border-radius:99px;cursor:pointer;transition:all 0.25s;
-}
-.bstart:hover { border-color:#E8A020;color:#E8A020; }
-.bstart:disabled { opacity:0.3;cursor:default; }
+.bwrap{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:.3rem 0}
+.bring{width:80px;height:80px;border-radius:50%;border:1px solid rgba(168,188,140,.3);display:flex;align-items:center;justify-content:center;position:relative;transition:transform 4s ease-in-out,border-color 3s ease}
+.bring::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle,rgba(220,155,25,.1) 0%,transparent 70%);transition:all 4s ease-in-out}
+.bring.ex{transform:scale(1.46);border-color:rgba(220,155,25,.62)}
+.bring.ex::before{inset:4px;background:radial-gradient(circle,rgba(220,155,25,.2) 0%,transparent 70%)}
+.bword{font-family:'IM Fell English',serif;font-size:.78rem;font-style:italic;color:#A8BC8C;z-index:1}
+.binstr{font-size:.72rem;color:#3D6A3D;text-align:center;min-height:1.3em}
+.bstart{background:none;border:1px solid rgba(90,138,90,.38);color:#3D6A3D;font-family:'Lato',sans-serif;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;padding:.45rem 1.3rem;border-radius:99px;cursor:pointer;transition:all .25s}
+.bstart:hover{border-color:#DCB82A;color:#DCB82A}
+.bstart:disabled{opacity:.3;cursor:default}
 
 /* Slider */
-.scol { display:flex;flex-direction:column;gap:0.65rem; }
-input[type=range] { -webkit-appearance:none;width:100%;height:2px;background:rgba(255,255,255,0.07);border-radius:99px;outline:none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#E8A020;border:2px solid #06100A;cursor:pointer;box-shadow:0 0 7px rgba(232,160,32,0.5); }
-.sends { display:flex;justify-content:space-between;font-size:0.62rem;color:#B8C9A0;opacity:0.45; }
-.sval { text-align:center;font-family:'IM Fell English',serif;font-size:2.2rem;font-weight:400;color:#E8A020;line-height:1; }
+.scol{display:flex;flex-direction:column;gap:.65rem}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:rgba(255,255,255,.07);border-radius:99px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#DCB82A;border:2px solid #07120A;cursor:pointer;box-shadow:0 0 7px rgba(220,155,25,.5)}
+.sends{display:flex;justify-content:space-between;font-size:.62rem;color:#A8BC8C;opacity:.45}
+.sval{text-align:center;font-family:'IM Fell English',serif;font-size:2.2rem;font-weight:400;color:#DCB82A;line-height:1}
 
 /* Choice */
-.cgrid { display:grid;grid-template-columns:1fr 1fr;gap:0.5rem; }
-.copt {
-  background:rgba(6,14,8,0.7);border:1px solid rgba(107,158,107,0.14);
-  color:#B8C9A0;font-family:'Lato',sans-serif;font-size:0.75rem;font-weight:300;
-  padding:0.7rem 0.5rem;border-radius:9px;cursor:pointer;text-align:center;line-height:1.4;transition:all 0.2s;
-}
-.copt:hover { border-color:rgba(232,160,32,0.3);color:#EEE0B8; }
-.copt.picked { background:rgba(42,107,46,0.2);border-color:#4A7A4A;color:#EEE0B8; }
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.copt{background:rgba(5,12,6,.72);border:1px solid rgba(90,138,90,.14);color:#A8BC8C;font-family:'Lato',sans-serif;font-size:.75rem;font-weight:300;padding:.7rem .5rem;border-radius:9px;cursor:pointer;text-align:center;line-height:1.4;transition:all .2s}
+.copt:hover{border-color:rgba(220,155,25,.3);color:#EDE0B4}
+.copt.picked{background:rgba(35,90,38,.2);border-color:#3D6A3D;color:#EDE0B4}
 
 /* Done button */
-.done-btn {
-  width:100%;
-  background:linear-gradient(135deg,rgba(42,107,46,0.52) 0%,rgba(28,74,34,0.72) 100%);
-  border:1px solid rgba(107,158,107,0.32);color:#EEE0B8;
-  font-family:'Lato',sans-serif;font-size:0.68rem;font-weight:400;
-  letter-spacing:0.18em;text-transform:uppercase;
-  padding:0.95rem;border-radius:10px;cursor:pointer;
-  transition:all 0.3s;position:relative;overflow:hidden;
-}
-.done-btn:hover { transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,0.5); }
-.done-btn:disabled { opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none; }
+.dbtn{width:100%;background:linear-gradient(135deg,rgba(35,90,38,.52),rgba(22,62,26,.72));border:1px solid rgba(90,138,90,.32);color:#EDE0B4;font-family:'Lato',sans-serif;font-size:.68rem;font-weight:400;letter-spacing:.18em;text-transform:uppercase;padding:.95rem;border-radius:10px;cursor:pointer;transition:all .3s}
+.dbtn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,.5)}
+.dbtn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* Locked */
-.locked {
-  width:100%;max-width:520px;
-  background:rgba(8,18,10,0.65);border:1px solid rgba(107,158,107,0.07);
-  border-radius:16px;padding:2.5rem 1.5rem;text-align:center;
-  animation:cardIn 0.5s ease both;backdrop-filter:blur(6px);
-}
-.l-glyph { font-family:'IM Fell English',serif;font-size:2rem;color:rgba(232,160,32,0.18);display:block;margin-bottom:0.9rem; }
-.locked h3 { font-family:'IM Fell English',serif;font-size:1.2rem;font-weight:400;font-style:italic;color:rgba(184,201,160,0.32);margin-bottom:0.45rem; }
-.locked p { font-size:0.75rem;color:rgba(74,122,74,0.5);line-height:1.6; }
-.l-next { margin-top:1rem;font-size:0.62rem;color:rgba(232,160,32,0.32);letter-spacing:0.12em;text-transform:uppercase; }
+.locked{width:100%;background:rgba(7,15,9,.68);border:1px solid rgba(90,138,90,.07);border-radius:16px;padding:2.5rem 1.5rem;text-align:center;animation:cardIn .5s ease both;backdrop-filter:blur(6px)}
+.lglyph{font-family:'IM Fell English',serif;font-size:2rem;color:rgba(220,155,25,.18);display:block;margin-bottom:.9rem}
+.locked h3{font-family:'IM Fell English',serif;font-size:1.2rem;font-weight:400;font-style:italic;color:rgba(168,188,140,.32);margin-bottom:.45rem}
+.locked p{font-size:.75rem;color:rgba(61,106,61,.5);line-height:1.6}
+.lnext{margin-top:1rem;font-size:.62rem;color:rgba(220,155,25,.32);letter-spacing:.12em;text-transform:uppercase}
 
 /* All done */
-.alldone { width:100%;max-width:520px;text-align:center;padding:3.5rem 1rem;animation:cardIn 0.8s ease both; }
-.ad-sym { font-family:'IM Fell English',serif;font-size:4.5rem;color:#E8A020;display:block;margin-bottom:1.2rem;opacity:0.5;animation:adGlow 5s ease-in-out infinite; }
-.alldone h2 { font-family:'IM Fell English',serif;font-size:2rem;font-weight:400;color:#EEE0B8;margin-bottom:0.8rem;letter-spacing:0.07em; }
-.alldone p { font-size:0.85rem;color:#B8C9A0;line-height:1.85;opacity:0.65; }
+.alldone{width:100%;text-align:center;padding:3.5rem 1rem;animation:cardIn .8s ease both}
+.adsym{font-family:'IM Fell English',serif;font-size:4.5rem;color:#DCB82A;display:block;margin-bottom:1.2rem;opacity:.5}
+.alldone h2{font-family:'IM Fell English',serif;font-size:2rem;font-weight:400;color:#EDE0B4;margin-bottom:.8rem}
+.alldone p{font-size:.85rem;color:#A8BC8C;line-height:1.85;opacity:.65}
 
 /* Toast */
-.toast {
-  position:fixed;bottom:2.5rem;left:50%;
-  transform:translateX(-50%) translateY(60px);
-  background:rgba(12,28,14,0.96);border:1px solid rgba(107,158,107,0.32);
-  color:#EEE0B8;font-size:0.75rem;letter-spacing:0.08em;
-  padding:0.7rem 1.5rem;border-radius:99px;
-  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  z-index:100;white-space:nowrap;backdrop-filter:blur(8px);
+/* ── INTRO SCREEN ── */
+#introOverlay{
+  position:fixed;inset:0;z-index:20;
+  display:none;
+  align-items:center;justify-content:center;
+  padding:1.5rem;
+  background:#07120A;
 }
-.toast.show { transform:translateX(-50%) translateY(0); }
+.intro-card{
+  width:100%;max-width:520px;
+  background:linear-gradient(158deg,rgba(13,30,16,.95) 0%,rgba(7,15,9,.98) 100%);
+  border:1px solid rgba(168,188,140,.15);
+  border-radius:20px;
+  padding:2.5rem 1.8rem 2rem;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  animation:cardIn .7s cubic-bezier(.4,0,.2,1) both;
+}
+.intro-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(220,155,25,.5),transparent);
+}
+.intro-glyph{
+  font-family:'IM Fell English',serif;
+  font-size:2.5rem;color:rgba(220,155,25,.5);
+  margin-bottom:1.2rem;
+}
+.intro-title{
+  font-family:'IM Fell English',serif;
+  font-size:2rem;font-weight:400;
+  color:#EDE0B4;margin-bottom:1.2rem;letter-spacing:.06em;
+}
+.intro-desc{
+  font-size:.88rem;line-height:1.85;
+  color:#A8BC8C;margin-bottom:1.6rem;font-weight:300;
+}
+.intro-details{
+  display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap;
+  font-size:.68rem;color:rgba(220,155,25,.65);
+  letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:2rem;
+}
+.enter-btn{
+  width:100%;
+  background:linear-gradient(135deg,rgba(35,90,38,.65),rgba(22,62,26,.85));
+  border:1px solid rgba(107,158,107,.5);
+  color:#EDE0B4;
+  font-family:'IM Fell English',serif;
+  font-size:1.15rem;font-style:italic;
+  letter-spacing:.08em;
+  padding:1.1rem;border-radius:12px;
+  cursor:pointer;transition:all .3s;
+}
+.enter-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(0,0,0,.5);
+  border-color:rgba(220,155,25,.4);
+}
+.toast{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%) translateY(-120px);background:rgba(10,24,13,.96);border:1px solid rgba(90,138,90,.32);color:#EDE0B4;font-size:.75rem;letter-spacing:.08em;padding:.7rem 1.5rem;border-radius:99px;transition:transform .5s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;backdrop-filter:blur(8px)}
+.toast.show{transform:translateX(-50%) translateY(0)!important}
 </style>
 </head>
 <body>
 
-<!-- Forest stage: 5 layers + sky + rays + fog + particles -->
-<div id="forestStage">
-  <div id="fSky"></div>
-  <div id="fRays"></div>
-  <div id="fl1" style="height:28vh"></div>
-  <div id="fl2" style="height:40vh"></div>
-  <div id="fl3" style="height:54vh"></div>
-  <div id="fl4" style="height:67vh"></div>
-  <div id="fl5" style="height:42vh"></div>
-  <div id="fFog"></div>
-  <div id="fParticles"></div>
+<!-- ══ FOREST STAGE ══════════════════════════════════════════
+     5 parallax layers of inline SVG trees.
+     viewBox="0 0 1440 H" → stretches to full viewport width.
+     Each layer: darker/taller/more-detailed = closer to viewer.
+     Layers positioned from bottom, SVG paths drawn as silhouettes.
+     ════════════════════════════════════════════════════════ -->
+<div id="stage">
+  <div id="sky"></div>
+
+  <!-- LIGHT RAYS (pure CSS divs, no JS) -->
+  <div id="rays">
+    <span style="left:27%;width:2px;height:62%;transform:rotate(-22deg);background:linear-gradient(180deg,rgba(230,185,60,.13) 0%,transparent 100%);--d:9s;--dl:0s"></span>
+    <span style="left:37%;width:2px;height:58%;transform:rotate(-11deg);background:linear-gradient(180deg,rgba(230,185,60,.08) 0%,transparent 100%);--d:7s;--dl:1.4s"></span>
+    <span style="left:46%;width:5px;height:68%;transform:rotate(-4deg);background:linear-gradient(180deg,rgba(230,185,60,.17) 0%,rgba(210,155,30,.07) 55%,transparent 100%);--d:11s;--dl:.6s"></span>
+    <span style="left:50%;width:7px;height:72%;transform:rotate(0deg);background:linear-gradient(180deg,rgba(230,185,60,.22) 0%,rgba(210,155,30,.09) 55%,transparent 100%);--d:13s;--dl:.3s"></span>
+    <span style="left:54%;width:5px;height:68%;transform:rotate(4deg);background:linear-gradient(180deg,rgba(230,185,60,.17) 0%,rgba(210,155,30,.07) 55%,transparent 100%);--d:10s;--dl:2s"></span>
+    <span style="left:63%;width:2px;height:58%;transform:rotate(11deg);background:linear-gradient(180deg,rgba(230,185,60,.08) 0%,transparent 100%);--d:8s;--dl:.8s"></span>
+    <span style="left:73%;width:2px;height:62%;transform:rotate(22deg);background:linear-gradient(180deg,rgba(230,185,60,.13) 0%,transparent 100%);--d:9s;--dl:1.8s"></span>
+  </div>
+
+  <!-- LAYER 1: farthest – tiny, misty, blue-green, opacity .28 -->
+  <div class="tl" id="tl1" style="height:22vh;opacity:.28">
+    <svg viewBox="0 0 1440 220" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <!-- 12 small distant trees -->
+      <path d="M20 220 L20 160 C22 140 30 120 35 105 C40 88 38 80 35 72 L35 72 C32 80 44 88 50 105 C56 122 54 140 56 160 L56 220Z" fill="#0E3D28"/>
+      <path d="M75 220 L75 155 C77 132 87 108 93 92 C99 75 97 65 93 55 C89 65 103 75 109 92 C116 109 113 132 115 155 L115 220Z" fill="#0D3A25"/>
+      <path d="M140 220 L140 162 C142 145 150 128 155 115 C160 101 158 93 155 86 C151 93 163 101 168 115 C174 129 172 145 174 162 L174 220Z" fill="#0F4029"/>
+      <path d="M200 220 L200 150 C202 128 214 102 221 84 C228 66 226 55 221 44 C216 55 230 66 237 84 C245 102 243 128 245 150 L245 220Z" fill="#0C3822"/>
+      <path d="M275 220 L275 158 C277 140 286 122 291 108 C296 94 294 86 291 79 C287 86 299 94 304 108 C310 122 308 140 310 158 L310 220Z" fill="#0E3D28"/>
+      <path d="M345 220 L345 152 C347 132 358 108 364 91 C371 74 369 63 364 53 C359 63 374 74 381 91 C388 108 385 132 387 152 L387 220Z" fill="#0D3B26"/>
+      <path d="M420 220 L420 160 C422 142 431 124 436 110 C441 96 439 88 436 81 C432 88 444 96 449 110 C455 124 453 142 455 160 L455 220Z" fill="#0F4029"/>
+      <path d="M500 220 L500 155 C502 136 512 116 518 101 C524 86 522 77 518 70 C514 77 527 86 533 101 C540 116 538 136 540 155 L540 220Z" fill="#0C3720"/>
+      <path d="M580 220 L580 162 C582 145 590 129 595 116 C600 103 598 95 595 88 C591 95 603 103 608 116 C614 129 612 145 614 162 L614 220Z" fill="#0E3D28"/>
+      <path d="M660 220 L660 148 C662 126 674 100 681 82 C688 64 686 53 681 42 C676 53 691 64 698 82 C706 100 703 126 706 148 L706 220Z" fill="#0D3A25"/>
+      <path d="M750 220 L750 158 C752 140 761 122 766 108 C771 94 769 86 766 79 C762 86 774 94 779 108 C785 122 783 140 785 158 L785 220Z" fill="#0F4029"/>
+      <path d="M840 220 L840 165 C842 148 849 133 854 121 C859 109 857 102 854 96 C850 102 861 109 866 121 C872 133 870 148 872 165 L872 220Z" fill="#0C3822"/>
+      <path d="M920 220 L920 153 C922 133 933 109 939 92 C946 75 944 64 939 54 C934 64 949 75 956 92 C964 109 961 133 963 153 L963 220Z" fill="#0E3D28"/>
+      <path d="M1000 220 L1000 160 C1002 142 1011 124 1016 110 C1021 96 1019 88 1016 81 C1012 88 1024 96 1029 110 C1035 124 1033 142 1035 160 L1035 220Z" fill="#0D3B26"/>
+      <path d="M1080 220 L1080 155 C1082 136 1092 116 1098 101 C1104 86 1102 77 1098 70 C1094 77 1107 86 1113 101 C1120 116 1118 136 1120 155 L1120 220Z" fill="#0F4029"/>
+      <path d="M1160 220 L1160 162 C1162 145 1170 129 1175 116 C1180 103 1178 95 1175 88 C1171 95 1183 103 1188 116 C1194 129 1192 145 1194 162 L1194 220Z" fill="#0C3720"/>
+      <path d="M1240 220 L1240 150 C1242 130 1253 106 1259 89 C1266 72 1264 61 1259 51 C1254 61 1269 72 1276 89 C1284 106 1281 130 1283 150 L1283 220Z" fill="#0E3D28"/>
+      <path d="M1320 220 L1320 158 C1322 140 1331 122 1336 108 C1341 94 1339 86 1336 79 C1332 86 1344 94 1349 108 C1355 122 1353 140 1355 158 L1355 220Z" fill="#0D3A25"/>
+      <path d="M1400 220 L1400 163 C1402 146 1410 130 1415 118 C1420 106 1418 99 1415 93 C1411 99 1422 106 1427 118 C1433 130 1431 146 1433 163 L1433 220Z" fill="#0F4029"/>
+      <!-- fill base -->
+      <rect x="0" y="200" width="1440" height="20" fill="#0E3D28"/>
+    </svg>
+  </div>
+
+  <!-- LAYER 2: far – taller, slightly warmer green, opacity .42 -->
+  <div class="tl" id="tl2" style="height:34vh;opacity:.42">
+    <svg viewBox="0 0 1440 340" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <!-- deciduous rounds + conifers -->
+      <path d="M10 340 L14 280 C10 255 18 228 28 210 C34 198 38 188 35 176 C32 188 48 198 54 210 C64 228 62 255 60 280 L64 340Z" fill="#165030"/>
+      <path d="M80 340 L84 268 C80 240 92 208 105 188 C113 174 118 162 114 148 C110 162 128 174 136 188 C150 208 148 240 146 268 L150 340Z" fill="#1A5E38"/>
+      <path d="M172 340 L175 278 C172 256 180 234 188 218 C194 206 197 197 194 187 C191 197 205 206 211 218 C220 234 218 256 218 278 L221 340Z" fill="#164E2E"/>
+      <path d="M250 340 Q252 300 258 275 Q264 250 275 232 Q282 220 285 208 Q280 220 296 232 Q308 250 314 275 Q320 300 322 340Z" fill="#1C6440"/>
+      <path d="M345 340 L348 272 C344 245 354 216 365 197 C372 184 376 174 373 163 C369 174 386 184 393 197 C404 216 402 245 402 272 L405 340Z" fill="#185638"/>
+      <path d="M430 340 L433 282 C430 260 438 240 446 225 C451 215 454 207 451 198 C448 207 461 215 466 225 C474 240 473 260 474 282 L477 340Z" fill="#165030"/>
+      <path d="M510 340 Q512 296 520 268 Q528 240 542 218 Q550 204 554 190 Q549 204 568 218 Q582 240 590 268 Q598 296 600 340Z" fill="#1A5E38"/>
+      <path d="M625 340 L628 276 C624 250 634 222 645 204 C652 192 656 182 653 172 C649 182 666 192 673 204 C684 222 682 250 682 276 L685 340Z" fill="#1C6440"/>
+      <path d="M710 340 L713 284 C710 264 718 246 725 232 C730 222 733 214 730 206 C727 214 739 222 744 232 C752 246 751 264 752 284 L755 340Z" fill="#164E2E"/>
+      <path d="M790 340 Q792 298 800 272 Q808 246 820 228 Q828 216 831 204 Q827 216 844 228 Q856 246 862 272 Q869 298 871 340Z" fill="#185638"/>
+      <path d="M895 340 L898 270 C894 242 906 210 918 190 C926 176 930 164 927 152 C923 164 941 176 949 190 C961 210 959 242 959 270 L962 340Z" fill="#1A5E38"/>
+      <path d="M980 340 L983 280 C980 258 988 238 995 223 C1000 213 1003 205 1000 197 C997 205 1009 213 1014 223 C1022 238 1021 258 1022 280 L1025 340Z" fill="#165030"/>
+      <path d="M1060 340 Q1062 300 1070 276 Q1078 252 1090 234 Q1097 222 1100 211 Q1096 222 1112 234 Q1124 252 1130 276 Q1136 300 1138 340Z" fill="#1C6440"/>
+      <path d="M1158 340 L1161 274 C1157 248 1168 218 1180 199 C1187 187 1191 177 1188 167 C1184 177 1200 187 1207 199 C1218 218 1216 248 1217 274 L1220 340Z" fill="#164E2E"/>
+      <path d="M1240 340 L1243 282 C1240 262 1248 244 1255 230 C1260 220 1263 212 1260 204 C1257 212 1269 220 1274 230 C1282 244 1281 262 1282 282 L1285 340Z" fill="#185638"/>
+      <path d="M1320 340 Q1322 296 1332 268 Q1342 240 1358 218 Q1366 204 1370 190 Q1365 204 1384 218 Q1398 240 1406 268 Q1413 296 1415 340Z" fill="#1A5E38"/>
+      <rect x="0" y="318" width="1440" height="22" fill="#165030"/>
+    </svg>
+  </div>
+
+  <!-- LAYER 3: mid – substantial, mixed canopy shapes, opacity .60 -->
+  <div class="tl" id="tl3" style="height:48vh;opacity:.60">
+    <svg viewBox="0 0 1440 480" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <!-- organic deciduous with crown bumps -->
+      <path d="M-10 480 L-6 395 C-10 362 4 328 20 306 Q32 290 38 272 Q30 258 38 242 Q44 258 58 272 Q72 288 76 306 C94 328 92 362 92 395 L96 480Z" fill="#1E6840"/>
+      <path d="M108 480 L112 388 C108 350 126 308 146 282 Q162 262 170 240 Q158 224 170 208 Q178 224 196 240 Q212 260 218 282 C238 308 236 350 237 388 L241 480Z" fill="#235E42"/>
+      <path d="M260 480 L264 400 C260 370 272 338 286 316 Q296 300 301 284 Q294 270 301 256 Q307 270 320 284 Q332 298 336 316 C350 338 348 370 349 400 L353 480Z" fill="#1E7044"/>
+      <path d="M370 480 Q374 420 384 388 Q394 356 412 330 Q424 312 430 292 Q420 276 430 260 Q438 276 454 292 Q468 310 472 330 Q490 356 498 388 Q506 420 508 480Z" fill="#227245"/>
+      <path d="M524 480 L528 394 C524 358 540 318 558 294 Q570 276 576 258 Q567 242 576 228 Q583 242 598 258 Q612 274 616 294 C634 318 632 358 633 394 L637 480Z" fill="#1D6840"/>
+      <path d="M654 480 L657 402 C654 374 664 344 676 324 Q684 310 688 296 Q682 282 688 270 Q694 282 706 296 Q718 308 721 324 C733 344 732 374 733 402 L736 480Z" fill="#246A46"/>
+      <path d="M754 480 Q758 418 770 384 Q782 350 802 322 Q814 304 820 284 Q810 268 820 252 Q828 268 846 284 Q860 302 864 322 Q884 350 892 384 Q900 418 902 480Z" fill="#1E7044"/>
+      <path d="M918 480 L922 392 C918 356 934 314 952 290 Q964 272 970 254 Q961 238 970 224 Q977 238 992 254 Q1006 270 1010 290 C1028 314 1026 356 1027 392 L1031 480Z" fill="#225E40"/>
+      <path d="M1046 480 L1050 404 C1046 376 1056 348 1068 328 Q1076 314 1080 300 Q1074 286 1080 274 Q1086 286 1098 300 Q1110 312 1113 328 C1125 348 1124 376 1125 404 L1128 480Z" fill="#1D6840"/>
+      <path d="M1142 480 Q1146 420 1158 388 Q1170 356 1190 328 Q1202 310 1208 290 Q1198 274 1208 258 Q1216 274 1232 290 Q1246 308 1250 328 Q1270 356 1278 388 Q1286 420 1288 480Z" fill="#246A46"/>
+      <path d="M1304 480 L1308 396 C1304 362 1320 322 1338 298 Q1350 280 1356 262 Q1347 246 1356 232 Q1363 246 1378 262 Q1392 278 1396 298 C1414 322 1412 362 1413 396 L1417 480Z" fill="#1E7044"/>
+      <rect x="0" y="456" width="1440" height="24" fill="#1D6840"/>
+    </svg>
+  </div>
+
+  <!-- LAYER 4: near – tall, dark rich, detailed trunks, opacity .80 -->
+  <div class="tl" id="tl4" style="height:62vh;opacity:.80">
+    <svg viewBox="0 0 1440 620" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <!-- wide oak-like canopies with trunks -->
+      <g><!-- Tree A --><path d="M-20 620 L-14 510 C-18 470 0 428 22 400 Q40 378 50 354 Q38 334 50 314 Q60 296 78 278 Q62 296 96 314 Q114 332 118 354 Q130 376 138 400 C162 428 160 470 162 510 L168 620Z" fill="#285E38"/><rect x="-2" y="500" width="22" height="120" fill="#1A3818" rx="2"/></g>
+      <g><!-- Tree B --><path d="M190 620 Q196 545 212 508 Q228 470 254 440 Q272 418 282 394 Q268 372 282 350 Q292 330 312 310 Q292 330 332 350 Q350 370 358 394 Q370 416 384 440 Q412 470 428 508 Q444 545 448 620Z" fill="#2E6A3E"/><rect x="306" y="495" width="26" height="125" fill="#1C3E1E" rx="2"/></g>
+      <g><!-- Tree C --><path d="M465 620 L470 520 C466 480 482 436 500 410 Q514 390 520 368 Q510 348 520 330 Q528 312 546 296 Q528 312 566 330 Q582 348 586 368 Q596 388 608 410 C628 436 626 480 627 520 L632 620Z" fill="#266040"/><rect x="525" y="508" width="20" height="112" fill="#1A3818" rx="2"/></g>
+      <g><!-- Tree D --><path d="M650 620 Q656 542 674 504 Q692 466 720 434 Q738 412 748 386 Q734 364 748 342 Q758 322 780 302 Q758 322 802 342 Q820 362 828 386 Q840 410 858 434 Q886 466 904 504 Q920 542 924 620Z" fill="#2A6838"/><rect x="775" y="498" width="28" height="122" fill="#1C3E1E" rx="2"/></g>
+      <g><!-- Tree E --><path d="M940 620 L945 518 C941 476 958 430 978 402 Q992 382 998 360 Q988 340 998 322 Q1006 304 1026 286 Q1006 304 1048 322 Q1064 340 1068 360 Q1078 380 1092 402 C1114 430 1112 476 1113 518 L1118 620Z" fill="#246040"/><rect x="1024" y="506" width="22" height="114" fill="#1A3818" rx="2"/></g>
+      <g><!-- Tree F --><path d="M1134 620 Q1140 546 1158 510 Q1176 474 1204 444 Q1222 422 1232 398 Q1218 376 1232 354 Q1242 334 1264 314 Q1242 334 1286 354 Q1304 374 1312 398 Q1324 420 1340 444 Q1368 474 1384 510 Q1398 546 1402 620Z" fill="#2E6A3E"/><rect x="1262" y="500" width="26" height="120" fill="#1C3E1E" rx="2"/></g>
+      <rect x="0" y="596" width="1440" height="24" fill="#246040"/>
+    </svg>
+  </div>
+
+  <!-- LAYER 5: foreground – very dark, largest, frame the scene, opacity 1 -->
+  <div class="tl" id="tl5" style="height:44vh;opacity:1.0">
+    <svg viewBox="0 0 1440 440" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+      <!-- Dark silhouette framing trees, edges of scene -->
+      <path d="M-40 440 L-32 340 C-38 300 -18 258 8 230 Q26 208 36 180 Q20 158 36 136 Q48 116 72 96 Q46 116 84 136 Q104 156 112 180 Q124 206 148 230 C176 258 174 300 175 340 L183 440Z" fill="#142A18"/>
+      <path d="M200 440 Q206 370 220 338 Q234 306 256 278 Q272 256 280 228 Q264 206 280 184 Q292 162 318 140 Q290 162 336 184 Q356 204 364 228 Q378 254 400 278 Q422 306 434 338 Q445 370 448 440Z" fill="#162C1A"/>
+      <path d="M1008 440 Q1014 374 1030 342 Q1046 310 1072 282 Q1090 260 1098 234 Q1082 212 1098 190 Q1110 168 1136 148 Q1108 168 1156 190 Q1176 210 1184 234 Q1198 258 1218 282 Q1244 310 1258 342 Q1270 374 1272 440Z" fill="#162C1A"/>
+      <path d="M1295 440 L1302 340 C1297 298 1318 254 1342 226 Q1360 204 1370 176 Q1354 154 1370 132 Q1382 112 1408 92 Q1382 112 1422 132 Q1442 152 1450 176 Q1462 202 1488 226 C1516 254 1514 298 1514 340 L1520 440Z" fill="#142A18"/>
+      <rect x="0" y="420" width="1440" height="20" fill="#142A18"/>
+    </svg>
+  </div>
+
+  <!-- FOG -->
+  <div id="fog"></div>
+
+  <!-- FLOATING LEAVES (inline, no JS) -->
+  <div class="leaf" style="left:12%;top:45%;--lx:45px;--ld:14s;--ll:0s"></div>
+  <div class="leaf" style="left:28%;top:35%;--lx:-38px;--ld:11s;--ll:3s"></div>
+  <div class="leaf" style="left:42%;top:28%;--lx:52px;--ld:16s;--ll:1.5s"></div>
+  <div class="leaf" style="left:55%;top:40%;--lx:-44px;--ld:13s;--ll:5s"></div>
+  <div class="leaf" style="left:68%;top:32%;--lx:36px;--ld:15s;--ll:2s"></div>
+  <div class="leaf" style="left:78%;top:50%;--lx:-50px;--ld:12s;--ll:7s"></div>
+  <div class="leaf" style="left:88%;top:22%;--lx:42px;--ld:17s;--ll:4s"></div>
+  <div class="leaf" style="left:20%;top:58%;--lx:-30px;--ld:10s;--ll:6s;background:rgba(100,160,55,.5)"></div>
+  <div class="leaf" style="left:60%;top:20%;--lx:28px;--ld:18s;--ll:8s;background:rgba(140,175,65,.5)"></div>
+  <!-- FIREFLIES -->
+  <div class="ff" style="left:22%;top:60%;--fd:3.5s;--fl:0s"></div>
+  <div class="ff" style="left:38%;top:72%;--fd:4.2s;--fl:1.2s"></div>
+  <div class="ff" style="left:55%;top:65%;--fd:3.8s;--fl:2.5s"></div>
+  <div class="ff" style="left:70%;top:75%;--fd:4.5s;--fl:.8s"></div>
+  <div class="ff" style="left:82%;top:62%;--fd:3.2s;--fl:3.5s"></div>
+</div>
+<!-- ══ END FOREST STAGE ══════════════════════════════════════ -->
+
+<!-- ══ INTRO OVERLAY ══ -->
+<div id="introOverlay" style="display:none;position:fixed;inset:0;z-index:20;align-items:center;justify-content:center;padding:1.5rem;background:#07120A;">
+  <div class="intro-card" style="max-width:520px;width:100%">
+    <div class="intro-glyph">✦</div>
+    <h2 class="intro-title">Vitaj v lese</h2>
+    <p class="intro-desc">
+      30 dní. Každý deň tri krátke zastávky –<br>ráno, na obed a večer.
+      <br><br>
+      Les ťa nečaká so stopkami.<br>
+      Spustí sa, keď ty povieš áno.
+    </p>
+    <div class="intro-details">
+      <span>🌿 Ráno &nbsp;·&nbsp; 8:00</span>
+      <span>☀️ Obed &nbsp;·&nbsp; 13:00</span>
+      <span>🌙 Večer &nbsp;·&nbsp; 18:00</span>
+    </div>
+    <button class="enter-btn" onclick="enterForest()">
+      Začať prechádzku lesom
+    </button>
+  </div>
 </div>
 
-<div class="app">
+<div id="appContent" style="display:none;min-height:100vh"><div class="app">
   <header>
     <div class="eyebrow">30-dňový plán sebaregulácie</div>
     <h1>L<em>e</em>s</h1>
     <div class="sub">DBT · CBT · Mindfulness · ACT</div>
   </header>
 
-  <!-- Illustrated branch divider -->
-  <div class="branch-div">
-    <svg width="240" height="26" viewBox="0 0 240 26" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.45">
-      <path d="M0 13 Q40 5 80 13 Q120 21 160 13 Q200 5 240 13" stroke="#6B9E6B" stroke-width="1" fill="none"/>
-      <circle cx="120" cy="13" r="3" fill="#E8A020"/>
-      <path d="M105 13 Q109 5 116 9" stroke="#6B9E6B" stroke-width="0.9" fill="none"/>
-      <path d="M135 13 Q131 5 124 9" stroke="#6B9E6B" stroke-width="0.9" fill="none"/>
-      <path d="M88 13 Q92 4 100 8" stroke="#6B9E6B" stroke-width="0.7" fill="none"/>
-      <path d="M152 13 Q148 4 140 8" stroke="#6B9E6B" stroke-width="0.7" fill="none"/>
-      <path d="M68 13 Q72 3 82 7" stroke="#6B9E6B" stroke-width="0.6" fill="none" opacity="0.7"/>
-      <path d="M172 13 Q168 3 158 7" stroke="#6B9E6B" stroke-width="0.6" fill="none" opacity="0.7"/>
+  <!-- Illustrated branch divider (inline SVG, guaranteed visible) -->
+  <div class="bdiv">
+    <svg width="260" height="26" viewBox="0 0 260 26" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.5">
+      <path d="M0 13 Q45 4 90 13 Q130 21 170 13 Q215 4 260 13" stroke="#5A8A5A" stroke-width="1" fill="none"/>
+      <circle cx="130" cy="13" r="3.5" fill="#DCB82A"/>
+      <path d="M113 13 Q117 4 125 8" stroke="#5A8A5A" stroke-width="1" fill="none"/>
+      <path d="M147 13 Q143 4 135 8" stroke="#5A8A5A" stroke-width="1" fill="none"/>
+      <path d="M96 13 Q100 3 110 7" stroke="#5A8A5A" stroke-width=".8" fill="none"/>
+      <path d="M164 13 Q160 3 150 7" stroke="#5A8A5A" stroke-width=".8" fill="none"/>
     </svg>
   </div>
 
   <div class="meta">
-    <div class="meta-t"><div class="firefly"></div><span id="timeEl">--:--</span></div>
+    <div class="meta-t"><div class="dot"></div><span id="timeEl">--:--</span></div>
     <div class="meta-d" id="dayEl">Deň 1 / 30</div>
   </div>
 
-  <div class="notif" id="notifStrip">
+  <div class="notif">
     <div class="notif-lbl">
       <strong>Pripomenutia lesa</strong>
       Každý deň o 8:00, 13:00 a 18:00
     </div>
-    <button class="notif-btn" id="notifBtn" onclick="reqNotif()">Povoliť</button>
+    <button class="nbtn" id="notifBtn" onclick="reqNotif()">Povoliť</button>
   </div>
 
   <div class="prog">
     <div class="prog-head">
-      <span class="prog-lbl">Rast</span>
+      <span class="prog-lbl">Rast lesa</span>
       <span class="prog-cnt" id="pCount">0 / 90</span>
     </div>
     <div class="prog-track"><div class="prog-fill" id="pFill" style="width:0%"></div></div>
     <div class="rings" id="rings"></div>
   </div>
 
-  <div id="main"></div>
+  <div id="main" style="width:100%;max-width:520px"></div>
 </div>
+
+</div><!-- /appContent -->
 
 <div class="toast" id="toast">✓ Aktivita dokončená</div>
 
+<!-- ── PARALLAX (minimal, no tree building) ── -->
 <script>
+(function(){
+  var ids=['tl1','tl2','tl3','tl4','tl5'];
+  var speeds=[2,5,9,15,22];
+  document.addEventListener('mousemove',function(e){
+    var cx=(e.clientX/window.innerWidth-.5);
+    ids.forEach(function(id,i){
+      var el=document.getElementById(id);
+      if(el) el.style.transform='translateX('+(cx*speeds[i])+'px)';
+    });
+  },{passive:true});
+})();
+</script>
 
-function makeSVGTree(H, fill, trunk, variant) {
-  var W = Math.round(H * 0.55);
-  var cx = W / 2;
-  var tw = Math.max(5, W * 0.11);
-
-  // Build crown using simple path string concat
-  var p = function(x, y) { return Math.round(x * 10) / 10 + ' ' + Math.round(y * 10) / 10; };
-
-  var crownPaths = [
-    // Conifer
-    'M' + p(cx, H*.04) +
-    ' C' + p(cx+W*.04,H*.04) + ' ' + p(cx+W*.28,H*.18) + ' ' + p(cx+W*.24,H*.27) +
-    ' C' + p(cx+W*.36,H*.22) + ' ' + p(cx+W*.40,H*.34) + ' ' + p(cx+W*.30,H*.40) +
-    ' C' + p(cx+W*.42,H*.36) + ' ' + p(cx+W*.44,H*.48) + ' ' + p(cx+W*.32,H*.53) +
-    ' C' + p(cx+W*.44,H*.50) + ' ' + p(cx+W*.46,H*.60) + ' ' + p(cx+W*.34,H*.65) +
-    ' C' + p(cx+W*.40,H*.68) + ' ' + p(cx+W*.36,H*.76) + ' ' + p(cx+W*.24,H*.74) +
-    ' L' + p(cx,H*.74) + ' L' + p(cx-W*.24,H*.74) +
-    ' C' + p(cx-W*.36,H*.76) + ' ' + p(cx-W*.40,H*.68) + ' ' + p(cx-W*.34,H*.65) +
-    ' C' + p(cx-W*.46,H*.60) + ' ' + p(cx-W*.44,H*.50) + ' ' + p(cx-W*.32,H*.53) +
-    ' C' + p(cx-W*.44,H*.48) + ' ' + p(cx-W*.42,H*.36) + ' ' + p(cx-W*.30,H*.40) +
-    ' C' + p(cx-W*.40,H*.34) + ' ' + p(cx-W*.36,H*.22) + ' ' + p(cx-W*.24,H*.27) +
-    ' C' + p(cx-W*.28,H*.18) + ' ' + p(cx-W*.04,H*.04) + ' ' + p(cx,H*.04) + 'Z',
-
-    // Round deciduous
-    'M' + p(cx-W*.08,H*.07) +
-    ' C' + p(cx+W*.20,0) + ' ' + p(cx+W*.50,H*.12) + ' ' + p(cx+W*.50,H*.34) +
-    ' C' + p(cx+W*.54,H*.46) + ' ' + p(cx+W*.46,H*.60) + ' ' + p(cx+W*.36,H*.68) +
-    ' C' + p(cx+W*.42,H*.76) + ' ' + p(cx+W*.30,H*.82) + ' ' + p(cx+W*.16,H*.79) +
-    ' L' + p(cx-W*.16,H*.79) +
-    ' C' + p(cx-W*.30,H*.82) + ' ' + p(cx-W*.42,H*.76) + ' ' + p(cx-W*.36,H*.68) +
-    ' C' + p(cx-W*.48,H*.60) + ' ' + p(cx-W*.54,H*.46) + ' ' + p(cx-W*.48,H*.34) +
-    ' C' + p(cx-W*.46,H*.12) + ' ' + p(cx-W*.18,0.01) + ' ' + p(cx-W*.08,H*.07) + 'Z',
-
-    // Leaning
-    'M' + p(cx-W*.14,H*.06) +
-    ' C' + p(cx+W*.18,-H*.02) + ' ' + p(cx+W*.54,H*.14) + ' ' + p(cx+W*.52,H*.38) +
-    ' C' + p(cx+W*.58,H*.50) + ' ' + p(cx+W*.44,H*.64) + ' ' + p(cx+W*.30,H*.70) +
-    ' C' + p(cx+W*.38,H*.78) + ' ' + p(cx+W*.22,H*.83) + ' ' + p(cx+W*.06,H*.79) +
-    ' L' + p(cx-W*.22,H*.79) +
-    ' C' + p(cx-W*.38,H*.82) + ' ' + p(cx-W*.46,H*.72) + ' ' + p(cx-W*.38,H*.64) +
-    ' C' + p(cx-W*.50,H*.56) + ' ' + p(cx-W*.48,H*.40) + ' ' + p(cx-W*.34,H*.32) +
-    ' C' + p(cx-W*.44,H*.20) + ' ' + p(cx-W*.28,H*.08) + ' ' + p(cx-W*.14,H*.06) + 'Z',
-
-    // Wide oak
-    'M' + p(cx,H*.08) +
-    ' C' + p(cx+W*.28,0.01) + ' ' + p(cx+W*.58,H*.18) + ' ' + p(cx+W*.56,H*.42) +
-    ' C' + p(cx+W*.62,H*.54) + ' ' + p(cx+W*.52,H*.66) + ' ' + p(cx+W*.40,H*.72) +
-    ' C' + p(cx+W*.46,H*.80) + ' ' + p(cx+W*.32,H*.85) + ' ' + p(cx+W*.18,H*.81) +
-    ' L' + p(cx-W*.18,H*.81) +
-    ' C' + p(cx-W*.32,H*.85) + ' ' + p(cx-W*.46,H*.80) + ' ' + p(cx-W*.40,H*.72) +
-    ' C' + p(cx-W*.52,H*.66) + ' ' + p(cx-W*.62,H*.54) + ' ' + p(cx-W*.56,H*.42) +
-    ' C' + p(cx-W*.58,H*.18) + ' ' + p(cx-W*.28,0.01) + ' ' + p(cx,H*.08) + 'Z'
-  ];
-
-  var d = crownPaths[variant % 4];
-  var tx = cx - tw/2;
-
-  var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" fill="none" style="display:block;flex-shrink:0">';
-  // Shadow
-  svg += '<path fill="rgba(0,0,0,0.3)" transform="translate(' + (W*0.025) + ',' + (H*0.022) + ')" d="' + d + '"/>';
-  // Crown
-  svg += '<path fill="' + fill + '" d="' + d + '"/>';
-  // Highlight
-  svg += '<path fill="rgba(255,255,255,0.06)" d="M' + p(cx,H*.08) + ' C' + p(cx+W*.15,H*.02) + ' ' + p(cx+W*.28,H*.10) + ' ' + p(cx+W*.20,H*.22) + ' C' + p(cx+W*.05,H*.14) + ' ' + p(cx,H*.10) + ' ' + p(cx,H*.08) + 'Z"/>';
-  // Trunk
-  svg += '<path fill="' + trunk + '" d="M' + p(tx,H*.74) + ' C' + p(tx-tw*.3,H*.85) + ' ' + p(tx,H*.95) + ' ' + p(tx,H) + ' L' + p(tx+tw,H) + ' C' + p(tx+tw,H*.95) + ' ' + p(tx+tw+tw*.3,H*.85) + ' ' + p(tx+tw,H*.74) + ' C' + p(tx+tw+tw*.15,H*.68) + ' ' + p(cx+tw*.1,H*.72) + ' ' + p(cx,H*.74) + ' C' + p(cx-tw*.1,H*.72) + ' ' + p(tx-tw*.15,H*.68) + ' ' + p(tx,H*.74) + 'Z"/>';
-  svg += '</svg>';
-  return svg;
-}
-
-
-
-// APP INIT
-
+<script>
 const PLAN=[
 {morning:{title:"Múdra myseľ – prvé stretnutie",dur:"6 min",method:"DBT · Vedomá myseľ",desc:"Múdra myseľ je priestor medzi čistou emóciou a čistou logikou. Pri každom nádychu si šepni 'múdra', pri výdychu 'myseľ'. Nechaj prísť odpoveď zvnútra.",type:"breathe"},
 noon:{title:"Prvý spúšťač dňa",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Situácia → Myšlienka → Emócia → Správanie. Dnes zachyť prvý článok reťaze.",type:"journal",prompt:"Situácia, ktorá ma dnes spustila: ___
@@ -785,33 +723,69 @@ evening:{title:"Záverečné slovo",dur:"10 min",method:"",desc:"Posledná stran
 
 // STATE
 let S={};
+let START=null; // timestamp when user entered the forest
 try{S=JSON.parse(localStorage.getItem('les30')||'{}');}catch(e){}
+try{const sd=localStorage.getItem('les30_start');if(sd)START=parseInt(sd);}catch(e){}
 function save(){try{localStorage.setItem('les30',JSON.stringify(S));}catch(e){}}
+function saveStart(){try{localStorage.setItem('les30_start',String(START));}catch(e){}}
 
 function slotIdx(h){return h<10.5?0:h<15.5?1:2}
 function sName(i){return['morning','noon','evening'][i]}
 function sLabel(i){return['🌿 Ráno','☀️ Obed','🌙 Večer'][i]}
 function sTime(i){return['08:00','13:00','18:00'][i]}
 
-function getCurrent(){
+// Slot open hours: morning=8, noon=13, evening=18
+const SLOT_HOURS=[8,13,18];
+
+function daysSinceStart(){
+  if(!START) return 0;
   const now=new Date();
-  const cur=slotIdx(now.getHours()+now.getMinutes()/60);
-  for(let d=0;d<30;d++)for(let s=0;s<3;s++)if(!S[`d${d}s${s}`])return{day:d,slot:s,cur};
-  return{day:-1,slot:-1,cur};
+  const startDay=new Date(START);
+  // Normalise both to midnight to count calendar days
+  const msPerDay=86400000;
+  const nowMid=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const startMid=new Date(startDay.getFullYear(),startDay.getMonth(),startDay.getDate()).getTime();
+  return Math.floor((nowMid-startMid)/msPerDay);
 }
 
-function available(day,slot,cur){
-  if(slot>cur)return false;
-  for(let d=0;d<day;d++)for(let s=0;s<3;s++)if(!S[`d${d}s${s}`])return false;
-  for(let s=0;s<slot;s++)if(!S[`d${day}s${s}`])return false;
-  return true;
+function getCurrent(){
+  if(!START) return{day:-1,slot:-1,cur:0,locked:false,notStarted:true};
+  const now=new Date();
+  const hour=now.getHours()+now.getMinutes()/60;
+  const cur=slotIdx(hour);
+  const today=daysSinceStart(); // 0-based day index
+
+  for(let d=0;d<30;d++){
+    for(let s=0;s<3;s++){
+      if(S[`d${d}s${s}`]) continue;
+      const laterDone=s<2&&(S[`d${d}s${s+1}`]||S[`d${d}s2`]);
+      // Slot is past if the calendar day has moved past it
+      const isPastDay=d<today;
+      const timeArrived=d===today&&hour>=SLOT_HOURS[s];
+      if(isPastDay||timeArrived||laterDone) return{day:d,slot:s,cur,locked:false};
+      return{day:d,slot:s,cur,locked:true};
+    }
+  }
+  return{day:-1,slot:-1,cur,locked:false};
+}
+
+function slotUnlocked(day,slot,cur,locked){
+  return !locked;
 }
 
 function countDone(){let c=0;for(let d=0;d<30;d++)for(let s=0;s<3;s++)if(S[`d${d}s${s}`])c++;return c;}
 
 // RENDER
 function render(){
-  const{day,slot,cur}=getCurrent();
+  const{day,slot,cur,locked,notStarted}=getCurrent();
+  // Show intro screen if challenge not yet started
+  if(notStarted){
+    document.getElementById('introOverlay').style.display='flex';
+    document.getElementById('appContent').style.display='none';
+    return;
+  }
+  document.getElementById('introOverlay').style.display='none';
+  document.getElementById('appContent').style.display='block';
   const done=countDone();
   const now=new Date();
   document.getElementById('timeEl').textContent=now.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
@@ -823,15 +797,30 @@ function render(){
   for(let d=0;d<30;d++){
     const el=document.createElement('div');
     const allD=S[`d${d}s0`]&&S[`d${d}s1`]&&S[`d${d}s2`];
-    el.className='ring'+(allD?' done':d===day?' active':'');
+    const anyD=S[`d${d}s0`]||S[`d${d}s1`]||S[`d${d}s2`];
+    // done=all 3 completed (gold filled), active=today, missed=some undone
+    let cls='ring';
+    if(allD) cls+=' done';
+    else if(d===day) cls+=' now';
+    // partial/missed days get no extra class = just dark ring
+    el.className=cls;
     rEl.appendChild(el);
   }
   const main=document.getElementById('main');
   if(day===-1){main.innerHTML=`<div class="alldone"><span class="ad-sym">✦</span><h2>30 dní v lese</h2><p>Dokončila si celý plán.<br>Les ťa naučil to, čo si potrebovala vedieť.<br>Brána ostáva otvorená.</p></div>`;return;}
+  if(slotUnlocked(day,slot,cur,locked)===false||locked){
+    main.innerHTML=`<div class="locked"><span class="l-glyph">✦</span><h3>Les čaká</h3><p>Ďalšia aktivita sa otvorí o ${sTime(slot)}.</p><div class="l-next">${sLabel(slot)} · ${sTime(slot)}</div></div>`;
+    return;
+  }
   const task=PLAN[day][sName(slot)];
-  if(!available(day,slot,cur)){main.innerHTML=`<div class="locked"><span class="l-glyph">✦</span><h3>Les čaká</h3><p>Ďalšia aktivita sa otvorí, keď príde jej čas.</p><div class="l-next">${sLabel(slot)} · ${sTime(slot)}</div></div>`;return;}
   main.innerHTML=buildCard(task,slot,day);
   bCycles=0;bTimer=null;picked=null;
+}
+
+function enterForest(){
+  START=Date.now();
+  saveStart();
+  render();
 }
 
 function buildCard(task,slot,day){
@@ -931,270 +920,19 @@ setInterval(function(){
   var e=document.getElementById('timeEl');
   if(e){var n=new Date();e.textContent=n.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}
 },30000);
-
-
-// ═══════════════════════════════════════════════════════════════════
-// MULTI-PLANE FOREST – Bambi multi-plane camera technique
-// 5 parallax layers, organic SVG trees, light rays, floating particles
-// ═══════════════════════════════════════════════════════════════════
-
-// ── SVG tree crown shapes – 4 hand-drawn Bezier variants ──────────
-function crownPath(W, H, variant, fill, shadowFill) {
-  // W = tree width, H = tree total height
-  // Crown occupies top 78% of H, trunk the bottom 22%
-  const ch = H * 0.78;  // crown height
-  const cx = W / 2;     // center x
-
-  const paths = {
-    // 1: Tall conifer – layered triangles, asymmetric
-    conifer: `
-      <g>
-        <!-- shadow layer offset -->
-        <path d="M${cx} ${H*0.04}
-          C${W*0.56} ${H*0.06} ${W*0.82} ${H*0.20} ${W*0.74} ${H*0.28}
-          C${W*0.90} ${H*0.24} ${W*0.94} ${H*0.36} ${W*0.80} ${H*0.42}
-          C${W*0.96} ${H*0.40} ${W*0.98} ${H*0.52} ${W*0.84} ${H*0.56}
-          C${W*0.97} ${H*0.56} ${W*0.96} ${H*0.66} ${W*0.82} ${H*0.70}
-          C${W*0.90} ${H*0.74} ${W*0.86} ${H*0.80} ${W*0.74} ${H*0.78}
-          L${cx+2} ${H*0.78} L${cx-2} ${H*0.78}
-          C${W*0.26} ${H*0.80} ${W*0.14} ${H*0.74} ${W*0.18} ${H*0.70}
-          C${W*0.04} ${H*0.66} ${W*0.03} ${H*0.56} ${W*0.16} ${H*0.56}
-          C${W*0.02} ${H*0.52} ${W*0.04} ${H*0.40} ${W*0.20} ${H*0.42}
-          C${W*0.06} ${H*0.36} ${W*0.10} ${H*0.24} ${W*0.26} ${H*0.28}
-          C${W*0.18} ${H*0.20} ${W*0.44} ${H*0.06} ${cx} ${H*0.04}Z"
-          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
-        <!-- main crown -->
-        <path d="M${cx} ${H*0.04}
-          C${W*0.56} ${H*0.06} ${W*0.82} ${H*0.20} ${W*0.74} ${H*0.28}
-          C${W*0.90} ${H*0.24} ${W*0.94} ${H*0.36} ${W*0.80} ${H*0.42}
-          C${W*0.96} ${H*0.40} ${W*0.98} ${H*0.52} ${W*0.84} ${H*0.56}
-          C${W*0.97} ${H*0.56} ${W*0.96} ${H*0.66} ${W*0.82} ${H*0.70}
-          C${W*0.90} ${H*0.74} ${W*0.86} ${H*0.80} ${W*0.74} ${H*0.78}
-          L${cx+2} ${H*0.78} L${cx-2} ${H*0.78}
-          C${W*0.26} ${H*0.80} ${W*0.14} ${H*0.74} ${W*0.18} ${H*0.70}
-          C${W*0.04} ${H*0.66} ${W*0.03} ${H*0.56} ${W*0.16} ${H*0.56}
-          C${W*0.02} ${H*0.52} ${W*0.04} ${H*0.40} ${W*0.20} ${H*0.42}
-          C${W*0.06} ${H*0.36} ${W*0.10} ${H*0.24} ${W*0.26} ${H*0.28}
-          C${W*0.18} ${H*0.20} ${W*0.44} ${H*0.06} ${cx} ${H*0.04}Z"
-          fill="${fill}"/>
-        <!-- highlight top -->
-        <path d="M${cx} ${H*0.04} C${W*0.52} ${H*0.06} ${W*0.65} ${H*0.14} ${W*0.60} ${H*0.20} C${W*0.50} ${H*0.12} ${W*0.45} ${H*0.08} ${cx} ${H*0.04}Z"
-          fill="rgba(255,255,255,0.07)"/>
-      </g>`,
-
-    // 2: Round deciduous – full organic crown
-    deciduous: `
-      <g>
-        <path d="M${cx} ${H*0.06}
-          C${W*0.72} ${H*0.02} ${W*0.97} ${H*0.18} ${W*0.96} ${H*0.38}
-          C${W*1.02} ${H*0.52} ${W*0.92} ${H*0.66} ${W*0.82} ${H*0.73}
-          C${W*0.88} ${H*0.80} ${W*0.76} ${H*0.83} ${W*0.64} ${H*0.80}
-          L${W*0.36} ${H*0.80}
-          C${W*0.24} ${H*0.83} ${W*0.12} ${H*0.80} ${W*0.18} ${H*0.73}
-          C${W*0.08} ${H*0.66} ${W*-0.02} ${H*0.52} ${W*0.04} ${H*0.38}
-          C${W*0.03} ${H*0.18} ${W*0.28} ${H*0.02} ${cx} ${H*0.06}Z"
-          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
-        <path d="M${cx} ${H*0.06}
-          C${W*0.72} ${H*0.02} ${W*0.97} ${H*0.18} ${W*0.96} ${H*0.38}
-          C${W*1.02} ${H*0.52} ${W*0.92} ${H*0.66} ${W*0.82} ${H*0.73}
-          C${W*0.88} ${H*0.80} ${W*0.76} ${H*0.83} ${W*0.64} ${H*0.80}
-          L${W*0.36} ${H*0.80}
-          C${W*0.24} ${H*0.83} ${W*0.12} ${H*0.80} ${W*0.18} ${H*0.73}
-          C${W*0.08} ${H*0.66} ${W*-0.02} ${H*0.52} ${W*0.04} ${H*0.38}
-          C${W*0.03} ${H*0.18} ${W*0.28} ${H*0.02} ${cx} ${H*0.06}Z"
-          fill="${fill}"/>
-        <path d="M${cx} ${H*0.06} C${W*0.65} ${H*0.02} ${W*0.82} ${H*0.14} ${W*0.78} ${H*0.26} C${W*0.64} ${H*0.10} ${W*0.52} ${H*0.06} ${cx} ${H*0.06}Z"
-          fill="rgba(255,255,255,0.08)"/>
-      </g>`,
-
-    // 3: Asymmetric leaning – wind-swept
-    leaning: `
-      <g>
-        <path d="M${W*0.44} ${H*0.05}
-          C${W*0.66} ${H*-0.01} ${W*1.00} ${H*0.14} ${W*0.97} ${H*0.36}
-          C${W*1.04} ${H*0.48} ${W*0.92} ${H*0.62} ${W*0.80} ${H*0.70}
-          C${W*0.88} ${H*0.78} ${W*0.74} ${H*0.82} ${W*0.60} ${H*0.78}
-          L${W*0.38} ${H*0.78}
-          C${W*0.18} ${H*0.80} ${W*0.04} ${H*0.72} ${W*0.10} ${H*0.64}
-          C${W*-0.02} ${H*0.54} ${W*0.02} ${H*0.40} ${W*0.16} ${H*0.34}
-          C${W*0.06} ${H*0.22} ${W*0.22} ${H*0.08} ${W*0.44} ${H*0.05}Z"
-          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
-        <path d="M${W*0.44} ${H*0.05}
-          C${W*0.66} ${H*-0.01} ${W*1.00} ${H*0.14} ${W*0.97} ${H*0.36}
-          C${W*1.04} ${H*0.48} ${W*0.92} ${H*0.62} ${W*0.80} ${H*0.70}
-          C${W*0.88} ${H*0.78} ${W*0.74} ${H*0.82} ${W*0.60} ${H*0.78}
-          L${W*0.38} ${H*0.78}
-          C${W*0.18} ${H*0.80} ${W*0.04} ${H*0.72} ${W*0.10} ${H*0.64}
-          C${W*-0.02} ${H*0.54} ${W*0.02} ${H*0.40} ${W*0.16} ${H*0.34}
-          C${W*0.06} ${H*0.22} ${W*0.22} ${H*0.08} ${W*0.44} ${H*0.05}Z"
-          fill="${fill}"/>
-        <path d="M${W*0.44} ${H*0.05} C${W*0.58} ${H*0.01} ${W*0.76} ${H*0.12} ${W*0.72} ${H*0.24} C${W*0.60} ${H*0.08} ${W*0.48} ${H*0.05} ${W*0.44} ${H*0.05}Z"
-          fill="rgba(255,255,255,0.07)"/>
-      </g>`,
-
-    // 4: Wide oak – broad spreading crown
-    oak: `
-      <g>
-        <path d="M${cx} ${H*0.08}
-          C${W*0.80} ${H*0.01} ${W*1.08} ${H*0.18} ${W*1.04} ${H*0.40}
-          C${W*1.10} ${H*0.53} ${W*0.98} ${H*0.66} ${W*0.86} ${H*0.73}
-          C${W*0.92} ${H*0.81} ${W*0.78} ${H*0.84} ${W*0.64} ${H*0.80}
-          L${W*0.36} ${H*0.80}
-          C${W*0.22} ${H*0.84} ${W*0.08} ${H*0.81} ${W*0.14} ${H*0.73}
-          C${W*0.02} ${H*0.66} ${W*-0.10} ${H*0.53} ${W*-0.04} ${H*0.40}
-          C${W*-0.08} ${H*0.18} ${W*0.20} ${H*0.01} ${cx} ${H*0.08}Z"
-          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
-        <path d="M${cx} ${H*0.08}
-          C${W*0.80} ${H*0.01} ${W*1.08} ${H*0.18} ${W*1.04} ${H*0.40}
-          C${W*1.10} ${H*0.53} ${W*0.98} ${H*0.66} ${W*0.86} ${H*0.73}
-          C${W*0.92} ${H*0.81} ${W*0.78} ${H*0.84} ${W*0.64} ${H*0.80}
-          L${W*0.36} ${H*0.80}
-          C${W*0.22} ${H*0.84} ${W*0.08} ${H*0.81} ${W*0.14} ${H*0.73}
-          C${W*0.02} ${H*0.66} ${W*-0.10} ${H*0.53} ${W*-0.04} ${H*0.40}
-          C${W*-0.08} ${H*0.18} ${W*0.20} ${H*0.01} ${cx} ${H*0.08}Z"
-          fill="${fill}"/>
-        <path d="M${cx} ${H*0.08} C${W*0.68} ${H*0.02} ${W*0.88} ${H*0.16} ${W*0.84} ${H*0.30} C${W*0.72} ${H*0.10} ${W*0.55} ${H*0.07} ${cx} ${H*0.08}Z"
-          fill="rgba(255,255,255,0.08)"/>
-      </g>`
-  };
-
-  const variants = ['conifer','deciduous','leaning','oak'];
-  return paths[variants[variant % 4]];
-}
-
-function makeTrunk(W, H) {
-  const tw = Math.max(4, W * 0.10);
-  const tx = W/2 - tw/2;
-  return `<path d="M${tx} ${H*0.75}
-    C${tx-tw*0.4} ${H*0.82} ${tx-tw*0.2} ${H*0.94} ${tx} ${H}
-    L${tx+tw} ${H}
-    C${tx+tw+tw*0.2} ${H*0.94} ${tx+tw+tw*0.4} ${H*0.82} ${tx+tw} ${H*0.75}Z"
-    fill="#2A0E04" opacity="0.95"/>
-  <path d="M${tx+tw*0.3} ${H*0.75} C${tx+tw*0.2} ${H*0.88} ${tx+tw*0.25} ${H} ${tx+tw*0.3} ${H}
-    L${tx+tw*0.5} ${H} C${tx+tw*0.5} ${H*0.95} ${tx+tw*0.45} ${H*0.82} ${tx+tw*0.3} ${H*0.75}Z"
-    fill="rgba(180,100,30,0.25)"/>`;
-}
-
-function buildTree(h, fillColor, shadowColor, variant) {
-  const w = Math.round(h * 0.42);
-  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;flex-shrink:0">
-    ${crownPath(w, h, variant, fillColor, shadowColor)}
-    ${makeTrunk(w, h)}
-  </svg>`;
-  return svg;
-}
-
-function buildForest() {
-  // Layer config: id, count, heightRange, fillColor, shadowColor, gap, zOffset
-  const layers = [
-    // Layer 1: farthest – tiny, misty blue-green, very transparent
-    { id:'fl1', count:11, hR:[80,130],  fill:'#0E3B28', shad:'#061A10', opacity:0.30, gap:'-4px' },
-    // Layer 2: far – small, medium blue-green
-    { id:'fl2', count:11, hR:[130,200], fill:'#124A32', shad:'#071E14', opacity:0.45, gap:'-6px' },
-    // Layer 3: mid – medium, brighter green
-    { id:'fl3', count:10, hR:[200,290], fill:'#1A6140', shad:'#0C2B1C', opacity:0.62, gap:'-8px' },
-    // Layer 4: near – tall, rich green
-    { id:'fl4', count:9,  hR:[280,400], fill:'#236B42', shad:'#102E1C', opacity:0.80, gap:'-10px' },
-    // Layer 5: foreground – very dark, closest, overlaps UI edges
-    { id:'fl5', count:7,  hR:[200,340], fill:'#122A18', shad:'#071410', opacity:1.00, gap:'-14px' },
-  ];
-
-  layers.forEach((layer, li) => {
-    const el = document.getElementById(layer.id);
-    if (!el) { console.warn('Missing layer:', layer.id); return; }
-    el.style.display = 'flex';
-    el.style.alignItems = 'flex-end';
-    el.style.justifyContent = 'space-between';
-    el.style.width = '100%';
-    el.style.opacity = layer.opacity;
-    // Mix 4 tree variants across each layer
-    for (let i = 0; i < layer.count; i++) {
-      const h = layer.hR[0] + Math.random() * (layer.hR[1] - layer.hR[0]);
-      const variant = (li + i * 2 + Math.floor(Math.random()*2)) % 4;
-      const div = document.createElement('div');
-      div.style.marginRight = layer.gap;
-      div.style.flexShrink = '0';
-      div.innerHTML = buildTree(Math.round(h), layer.fill, layer.shad, variant);
-      el.appendChild(div);
-    }
-  });
-
-  // Light rays
-  const raysEl = document.getElementById('fRays');
-  if (raysEl) {
-    const rconf = [
-      { pct:28, rot:-24, w:2, op:0.10, dur:8,  del:0   },
-      { pct:36, rot:-14, w:2, op:0.07, dur:6,  del:1.3 },
-      { pct:44, rot:-5,  w:4, op:0.15, dur:10, del:0.5 },
-      { pct:50, rot:0,   w:6, op:0.20, dur:12, del:0.8 },
-      { pct:56, rot:5,   w:4, op:0.15, dur:10, del:1.8 },
-      { pct:64, rot:14,  w:2, op:0.07, dur:7,  del:0.3 },
-      { pct:72, rot:24,  w:2, op:0.10, dur:9,  del:2.1 },
-    ];
-    rconf.forEach(r => {
-      const ray = document.createElement('div');
-      ray.style.cssText = `position:absolute;top:0;left:${r.pct}%;width:${r.w}px;height:65%;transform-origin:top center;transform:rotate(${r.rot}deg);background:linear-gradient(180deg,rgba(244,210,100,${r.op}) 0%,rgba(232,160,30,${r.op*0.5}) 50%,transparent 100%);border-radius:99px;animation:rayAnim ${r.dur}s ease-in-out ${r.del}s infinite`;
-      raysEl.appendChild(ray);
-    });
-  }
-
-  // Floating particles (fireflies/leaves)
-  const partEl = document.getElementById('fParticles');
-  if (partEl) {
-    for (let i = 0; i < 18; i++) {
-      const p = document.createElement('div');
-      const sz = 2 + Math.random() * 3;
-      const dur = 8 + Math.random() * 14;
-      const del = Math.random() * 16;
-      const x = 5 + Math.random() * 90;
-      const drift = (Math.random() - 0.5) * 120;
-      const isLeaf = Math.random() > 0.5;
-      p.style.cssText = `position:absolute;left:${x}%;top:${10+Math.random()*60}%;width:${sz}px;height:${sz}px;border-radius:${isLeaf?'40% 0':'50%'};background:rgba(${isLeaf?'140,190,80':'244,210,80'},${0.3+Math.random()*0.4});animation:partFloat ${dur}s ease-in-out ${del}s infinite;--drift:${drift}px`;
-      partEl.appendChild(p);
-    }
-  }
-}
-
-// Parallax on mouse move
-(function() {
-  var ticking = false;
-  document.addEventListener('mousemove', function(e) {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function() {
-      var cx = (e.clientX / window.innerWidth - 0.5);
-      var cy = (e.clientY / window.innerHeight - 0.5) * 0.4;
-      var layers = [
-        {id:'fl1', sx:3,  sy:1},
-        {id:'fl2', sx:6,  sy:2},
-        {id:'fl3', sx:11, sy:3},
-        {id:'fl4', sx:17, sy:5},
-        {id:'fl5', sx:24, sy:7},
-      ];
-      layers.forEach(function(l) {
-        var el = document.getElementById(l.id);
-        if (el) el.style.transform = 'translate('+(cx*l.sx)+'px,'+(cy*l.sy)+'px)';
-      });
-      ticking = false;
-    });
-  }, {passive:true});
-})();
-
-
-// Init
-buildForest();
+// ── INIT ────────────────────────────────────────────
 render();
 if(Notification.permission==='granted'){
   var nb=document.getElementById('notifBtn');
   if(nb){nb.textContent='✓ Aktívne';nb.classList.add('ok');nb.disabled=true;}
   schedNotif();
 }
-var now2=new Date();
-document.getElementById('timeEl').textContent=now2.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
-setInterval(function(){
+(function tick(){
   var e=document.getElementById('timeEl');
   if(e){var n=new Date();e.textContent=n.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}
-},30000);
+  setTimeout(tick,30000);
+})();
+
 </script>
 </body>
 </html>
