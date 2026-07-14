@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#07120A"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les – 30-dňový plán</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ── KEYFRAMES ────────────────────────────────────────────── */
+@keyframes rayAnim   { 0%,100%{opacity:1} 50%{opacity:0.35} }
+@keyframes partFloat {
+  0%   { opacity:0; transform:translateY(0) translateX(0) rotate(0deg); }
+  15%  { opacity:0.7; }
+  85%  { opacity:0.4; }
+  100% { opacity:0; transform:translateY(-180px) translateX(var(--drift,40px)) rotate(360deg); }
+}
+@keyframes fogDrift  { 0%,100%{transform:scaleX(1) translateX(0)} 50%{transform:scaleX(1.04) translateX(-1%)} }
+@keyframes glowPulse { 0%,100%{opacity:1;box-shadow:0 0 5px #E8A020} 50%{opacity:0.35;box-shadow:0 0 2px #E8A020} }
+@keyframes cardIn    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes ringPulse { 0%,100%{box-shadow:0 0 4px rgba(232,160,32,.4)} 50%{box-shadow:0 0 10px rgba(232,160,32,.8)} }
+@keyframes adGlow    { 0%,100%{text-shadow:0 0 30px rgba(232,160,32,.3)} 50%{text-shadow:0 0 60px rgba(232,160,32,.7)} }
+
+/* ── BASE ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
+html { scroll-behavior:smooth }
+body {
+  background: #06100A;
+  color: #EEE0B8;
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── FOREST STAGE ─────────────────────────────────────────── */
+#forestStage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Sky: deep night gradient with warm horizon glow */
+#fSky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 38% at 50% 60%,
+      rgba(180,120,20,0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 100%,
+      rgba(18,50,24,0.95) 0%, transparent 65%),
+    linear-gradient(180deg,
+      #030A07 0%,
+      #060F0A 20%,
+      #071510 45%,
+      #0A1E12 70%,
+      #0C2416 100%
+    );
+}
+
+/* Rays container */
+#fRays {
+  position: absolute;
+  inset: 0;
+}
+
+/* Tree layers – each absolutely at bottom, flex row */
+#fl1,#fl2,#fl3,#fl4,#fl5 {
+  position: absolute;
+  bottom: 0;
+  left: -3%;
+  right: -3%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  will-change: transform;
+  transition: transform 0.12s ease-out;
+}
+
+/* Ground fog – soft, animated */
+#fFog {
+  position: absolute;
+  bottom: 0;
+  left: -10%;
+  right: -10%;
+  height: 180px;
+  background: linear-gradient(0deg,
+    rgba(6,16,10,1) 0%,
+    rgba(8,20,12,0.85) 25%,
+    rgba(10,24,14,0.5) 55%,
+    transparent 100%
+  );
+  animation: fogDrift 20s ease-in-out infinite;
+}
+
+/* Particle layer */
+#fParticles {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── APP CONTENT ──────────────────────────────────────────── */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1.2rem 8rem;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+header {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  padding: 3.5rem 0 2rem;
+}
+
+.eyebrow {
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #6B9E6B;
+  margin-bottom: 0.8rem;
+}
+
+header h1 {
+  font-family: 'IM Fell English', serif;
+  font-size: 5.5rem;
+  font-weight: 400;
+  color: #EEE0B8;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  text-shadow:
+    0 0 40px rgba(232,160,32,0.4),
+    0 2px 60px rgba(232,160,32,0.2);
+}
+
+header h1 em {
+  font-style: italic;
+  color: #F4D878;
+}
+
+.sub {
+  font-size: 0.65rem;
+  color: #4A7A4A;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Branch divider */
+.branch-div {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── META ─────────────────────────────────────────────────── */
+.meta {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+  padding: 0 0.2rem;
+}
+
+.meta-t {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  color: #B8C9A0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.firefly {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #E8A020;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.meta-d {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.9rem;
+  color: #B8C9A0;
+  font-style: italic;
+}
+
+/* ── NOTIF ────────────────────────────────────────────────── */
+.notif {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(12,28,14,0.75);
+  border: 1px solid rgba(107,158,107,0.18);
+  border-radius: 12px;
+  padding: 0.85rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  backdrop-filter: blur(6px);
+}
+
+.notif-lbl {
+  font-size: 0.75rem;
+  color: #B8C9A0;
+  line-height: 1.5;
+}
+.notif-lbl strong {
+  display: block;
+  color: #EEE0B8;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  margin-bottom: 0.1rem;
+}
+
+.notif-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid rgba(232,160,32,0.35);
+  color: #E8A020;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.9rem;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.notif-btn:hover { background: rgba(232,160,32,0.08); }
+.notif-btn.ok { border-color: #4A7A4A; color: #4A7A4A; cursor: default; }
+
+/* ── PROGRESS ─────────────────────────────────────────────── */
+.prog {
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 2rem;
+}
+
+.prog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.prog-lbl {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #B8C9A0;
+  opacity: 0.65;
+}
+
+.prog-cnt {
+  font-size: 0.62rem;
+  color: #E8A020;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.prog-track {
+  height: 2px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4A7A4A, #E8A020);
+  border-radius: 99px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.rings { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.ring {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(107,158,107,0.22);
+  transition: all 0.5s;
+}
+.ring.done  { background: #4A7A4A; border-color: #4A7A4A; }
+.ring.active { border-color: #E8A020; animation: ringPulse 2.5s ease-in-out infinite; }
+
+/* ── CARD ─────────────────────────────────────────────────── */
+.card {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(160deg, rgba(15,36,18,0.88) 0%, rgba(8,18,10,0.92) 100%);
+  border: 1px solid rgba(184,201,160,0.13);
+  border-radius: 16px;
+  padding: 1.8rem 1.7rem 1.6rem;
+  position: relative;
+  overflow: hidden;
+  animation: cardIn 0.55s cubic-bezier(0.4,0,0.2,1) both;
+  backdrop-filter: blur(8px);
+}
+
+.card::before {
+  content:'';
+  position:absolute;
+  bottom:0;left:15%;right:15%;
+  height:90px;
+  background:radial-gradient(ellipse at bottom,rgba(232,160,32,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.card::after {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,
+    transparent 0%,rgba(184,201,160,0.25) 20%,
+    rgba(232,160,32,0.45) 50%,
+    rgba(184,201,160,0.25) 80%,transparent 100%
+  );
+}
+
+.slot-badge {
+  display:inline-flex;align-items:center;gap:0.4rem;
+  font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:#E8A020;margin-bottom:1rem;opacity:0.7;
+}
+.slot-badge::before { content:'';display:block;width:20px;height:1px;background:linear-gradient(90deg,transparent,#E8A020); }
+
+.card h2 {
+  font-family:'IM Fell English',serif;
+  font-size:1.65rem;font-weight:400;
+  color:#EEE0B8;line-height:1.25;
+  margin-bottom:0.3rem;
+}
+
+.card-dur { font-size:0.65rem;color:#E8A020;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.85rem;opacity:0.55; }
+
+.method-tag {
+  display:inline-block;font-size:0.58rem;letter-spacing:0.13em;text-transform:uppercase;
+  color:#6B9E6B;background:rgba(42,107,46,0.15);
+  border:1px solid rgba(42,107,46,0.28);border-radius:99px;
+  padding:0.22rem 0.65rem;margin-bottom:0.9rem;
+}
+
+.card-desc { font-size:0.86rem;line-height:1.82;color:#B8C9A0;margin-bottom:1.4rem;font-weight:300; }
+
+/* ── INTERACTIVE ZONES ────────────────────────────────────── */
+.ix {
+  background:rgba(4,10,5,0.6);
+  border:1px solid rgba(107,158,107,0.12);
+  border-radius:11px;
+  padding:1.2rem 1.1rem;
+  margin-bottom:1.3rem;
+}
+
+.ix-lbl { font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:#E8A020;margin-bottom:0.75rem;opacity:0.6; }
+
+textarea {
+  width:100%;background:transparent;border:none;
+  border-bottom:1px solid rgba(184,201,160,0.18);
+  color:#EEE0B8;font-family:'Lato',sans-serif;
+  font-size:0.84rem;font-weight:300;line-height:1.8;
+  resize:none;outline:none;padding:0.2rem 0 0.5rem;min-height:84px;
+}
+textarea::placeholder { color:rgba(184,201,160,0.25); }
+
+/* Breathe */
+.bwrap { display:flex;flex-direction:column;align-items:center;gap:1.1rem;padding:0.3rem 0; }
+
+.bring {
+  width:82px;height:82px;border-radius:50%;
+  border:1px solid rgba(184,201,160,0.28);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  transition:transform 4s ease-in-out,border-color 3s ease;
+}
+.bring::before {
+  content:'';position:absolute;inset:10px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,160,32,0.1) 0%,transparent 70%);
+  transition:all 4s ease-in-out;
+}
+.bring.ex { transform:scale(1.48);border-color:rgba(232,160,32,0.6); }
+.bring.ex::before { inset:4px;background:radial-gradient(circle,rgba(232,160,32,0.22) 0%,transparent 70%); }
+
+.bword { font-family:'IM Fell English',serif;font-size:0.78rem;font-style:italic;color:#B8C9A0;z-index:1; }
+.binstr { font-size:0.72rem;color:#4A7A4A;text-align:center;min-height:1.3em; }
+
+.bstart {
+  background:none;border:1px solid rgba(107,158,107,0.38);color:#4A7A4A;
+  font-family:'Lato',sans-serif;font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;
+  padding:0.45rem 1.3rem;border-radius:99px;cursor:pointer;transition:all 0.25s;
+}
+.bstart:hover { border-color:#E8A020;color:#E8A020; }
+.bstart:disabled { opacity:0.3;cursor:default; }
+
+/* Slider */
+.scol { display:flex;flex-direction:column;gap:0.65rem; }
+input[type=range] { -webkit-appearance:none;width:100%;height:2px;background:rgba(255,255,255,0.07);border-radius:99px;outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#E8A020;border:2px solid #06100A;cursor:pointer;box-shadow:0 0 7px rgba(232,160,32,0.5); }
+.sends { display:flex;justify-content:space-between;font-size:0.62rem;color:#B8C9A0;opacity:0.45; }
+.sval { text-align:center;font-family:'IM Fell English',serif;font-size:2.2rem;font-weight:400;color:#E8A020;line-height:1; }
+
+/* Choice */
+.cgrid { display:grid;grid-template-columns:1fr 1fr;gap:0.5rem; }
+.copt {
+  background:rgba(6,14,8,0.7);border:1px solid rgba(107,158,107,0.14);
+  color:#B8C9A0;font-family:'Lato',sans-serif;font-size:0.75rem;font-weight:300;
+  padding:0.7rem 0.5rem;border-radius:9px;cursor:pointer;text-align:center;line-height:1.4;transition:all 0.2s;
+}
+.copt:hover { border-color:rgba(232,160,32,0.3);color:#EEE0B8; }
+.copt.picked { background:rgba(42,107,46,0.2);border-color:#4A7A4A;color:#EEE0B8; }
+
+/* Done button */
+.done-btn {
+  width:100%;
+  background:linear-gradient(135deg,rgba(42,107,46,0.52) 0%,rgba(28,74,34,0.72) 100%);
+  border:1px solid rgba(107,158,107,0.32);color:#EEE0B8;
+  font-family:'Lato',sans-serif;font-size:0.68rem;font-weight:400;
+  letter-spacing:0.18em;text-transform:uppercase;
+  padding:0.95rem;border-radius:10px;cursor:pointer;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.done-btn:hover { transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,0.5); }
+.done-btn:disabled { opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none; }
+
+/* Locked */
+.locked {
+  width:100%;max-width:520px;
+  background:rgba(8,18,10,0.65);border:1px solid rgba(107,158,107,0.07);
+  border-radius:16px;padding:2.5rem 1.5rem;text-align:center;
+  animation:cardIn 0.5s ease both;backdrop-filter:blur(6px);
+}
+.l-glyph { font-family:'IM Fell English',serif;font-size:2rem;color:rgba(232,160,32,0.18);display:block;margin-bottom:0.9rem; }
+.locked h3 { font-family:'IM Fell English',serif;font-size:1.2rem;font-weight:400;font-style:italic;color:rgba(184,201,160,0.32);margin-bottom:0.45rem; }
+.locked p { font-size:0.75rem;color:rgba(74,122,74,0.5);line-height:1.6; }
+.l-next { margin-top:1rem;font-size:0.62rem;color:rgba(232,160,32,0.32);letter-spacing:0.12em;text-transform:uppercase; }
+
+/* All done */
+.alldone { width:100%;max-width:520px;text-align:center;padding:3.5rem 1rem;animation:cardIn 0.8s ease both; }
+.ad-sym { font-family:'IM Fell English',serif;font-size:4.5rem;color:#E8A020;display:block;margin-bottom:1.2rem;opacity:0.5;animation:adGlow 5s ease-in-out infinite; }
+.alldone h2 { font-family:'IM Fell English',serif;font-size:2rem;font-weight:400;color:#EEE0B8;margin-bottom:0.8rem;letter-spacing:0.07em; }
+.alldone p { font-size:0.85rem;color:#B8C9A0;line-height:1.85;opacity:0.65; }
+
+/* Toast */
+.toast {
+  position:fixed;bottom:2.5rem;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:rgba(12,28,14,0.96);border:1px solid rgba(107,158,107,0.32);
+  color:#EEE0B8;font-size:0.75rem;letter-spacing:0.08em;
+  padding:0.7rem 1.5rem;border-radius:99px;
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:100;white-space:nowrap;backdrop-filter:blur(8px);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Forest stage: 5 layers + sky + rays + fog + particles -->
+<div id="forestStage">
+  <div id="fSky"></div>
+  <div id="fRays"></div>
+  <div id="fl1" style="height:28vh"></div>
+  <div id="fl2" style="height:40vh"></div>
+  <div id="fl3" style="height:54vh"></div>
+  <div id="fl4" style="height:67vh"></div>
+  <div id="fl5" style="height:42vh"></div>
+  <div id="fFog"></div>
+  <div id="fParticles"></div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="eyebrow">30-dňový plán sebaregulácie</div>
+    <h1>L<em>e</em>s</h1>
+    <div class="sub">DBT · CBT · Mindfulness · ACT</div>
+  </header>
+
+  <!-- Illustrated branch divider -->
+  <div class="branch-div">
+    <svg width="240" height="26" viewBox="0 0 240 26" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.45">
+      <path d="M0 13 Q40 5 80 13 Q120 21 160 13 Q200 5 240 13" stroke="#6B9E6B" stroke-width="1" fill="none"/>
+      <circle cx="120" cy="13" r="3" fill="#E8A020"/>
+      <path d="M105 13 Q109 5 116 9" stroke="#6B9E6B" stroke-width="0.9" fill="none"/>
+      <path d="M135 13 Q131 5 124 9" stroke="#6B9E6B" stroke-width="0.9" fill="none"/>
+      <path d="M88 13 Q92 4 100 8" stroke="#6B9E6B" stroke-width="0.7" fill="none"/>
+      <path d="M152 13 Q148 4 140 8" stroke="#6B9E6B" stroke-width="0.7" fill="none"/>
+      <path d="M68 13 Q72 3 82 7" stroke="#6B9E6B" stroke-width="0.6" fill="none" opacity="0.7"/>
+      <path d="M172 13 Q168 3 158 7" stroke="#6B9E6B" stroke-width="0.6" fill="none" opacity="0.7"/>
+    </svg>
+  </div>
+
+  <div class="meta">
+    <div class="meta-t"><div class="firefly"></div><span id="timeEl">--:--</span></div>
+    <div class="meta-d" id="dayEl">Deň 1 / 30</div>
+  </div>
+
+  <div class="notif" id="notifStrip">
+    <div class="notif-lbl">
+      <strong>Pripomenutia lesa</strong>
+      Každý deň o 8:00, 13:00 a 18:00
+    </div>
+    <button class="notif-btn" id="notifBtn" onclick="reqNotif()">Povoliť</button>
+  </div>
+
+  <div class="prog">
+    <div class="prog-head">
+      <span class="prog-lbl">Rast</span>
+      <span class="prog-cnt" id="pCount">0 / 90</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="pFill" style="width:0%"></div></div>
+    <div class="rings" id="rings"></div>
+  </div>
+
+  <div id="main"></div>
+</div>
+
+<div class="toast" id="toast">✓ Aktivita dokončená</div>
+
+<script>
+
+function makeSVGTree(H, fill, trunk, variant) {
+  var W = Math.round(H * 0.55);
+  var cx = W / 2;
+  var tw = Math.max(5, W * 0.11);
+
+  // Build crown using simple path string concat
+  var p = function(x, y) { return Math.round(x * 10) / 10 + ' ' + Math.round(y * 10) / 10; };
+
+  var crownPaths = [
+    // Conifer
+    'M' + p(cx, H*.04) +
+    ' C' + p(cx+W*.04,H*.04) + ' ' + p(cx+W*.28,H*.18) + ' ' + p(cx+W*.24,H*.27) +
+    ' C' + p(cx+W*.36,H*.22) + ' ' + p(cx+W*.40,H*.34) + ' ' + p(cx+W*.30,H*.40) +
+    ' C' + p(cx+W*.42,H*.36) + ' ' + p(cx+W*.44,H*.48) + ' ' + p(cx+W*.32,H*.53) +
+    ' C' + p(cx+W*.44,H*.50) + ' ' + p(cx+W*.46,H*.60) + ' ' + p(cx+W*.34,H*.65) +
+    ' C' + p(cx+W*.40,H*.68) + ' ' + p(cx+W*.36,H*.76) + ' ' + p(cx+W*.24,H*.74) +
+    ' L' + p(cx,H*.74) + ' L' + p(cx-W*.24,H*.74) +
+    ' C' + p(cx-W*.36,H*.76) + ' ' + p(cx-W*.40,H*.68) + ' ' + p(cx-W*.34,H*.65) +
+    ' C' + p(cx-W*.46,H*.60) + ' ' + p(cx-W*.44,H*.50) + ' ' + p(cx-W*.32,H*.53) +
+    ' C' + p(cx-W*.44,H*.48) + ' ' + p(cx-W*.42,H*.36) + ' ' + p(cx-W*.30,H*.40) +
+    ' C' + p(cx-W*.40,H*.34) + ' ' + p(cx-W*.36,H*.22) + ' ' + p(cx-W*.24,H*.27) +
+    ' C' + p(cx-W*.28,H*.18) + ' ' + p(cx-W*.04,H*.04) + ' ' + p(cx,H*.04) + 'Z',
+
+    // Round deciduous
+    'M' + p(cx-W*.08,H*.07) +
+    ' C' + p(cx+W*.20,0) + ' ' + p(cx+W*.50,H*.12) + ' ' + p(cx+W*.50,H*.34) +
+    ' C' + p(cx+W*.54,H*.46) + ' ' + p(cx+W*.46,H*.60) + ' ' + p(cx+W*.36,H*.68) +
+    ' C' + p(cx+W*.42,H*.76) + ' ' + p(cx+W*.30,H*.82) + ' ' + p(cx+W*.16,H*.79) +
+    ' L' + p(cx-W*.16,H*.79) +
+    ' C' + p(cx-W*.30,H*.82) + ' ' + p(cx-W*.42,H*.76) + ' ' + p(cx-W*.36,H*.68) +
+    ' C' + p(cx-W*.48,H*.60) + ' ' + p(cx-W*.54,H*.46) + ' ' + p(cx-W*.48,H*.34) +
+    ' C' + p(cx-W*.46,H*.12) + ' ' + p(cx-W*.18,0.01) + ' ' + p(cx-W*.08,H*.07) + 'Z',
+
+    // Leaning
+    'M' + p(cx-W*.14,H*.06) +
+    ' C' + p(cx+W*.18,-H*.02) + ' ' + p(cx+W*.54,H*.14) + ' ' + p(cx+W*.52,H*.38) +
+    ' C' + p(cx+W*.58,H*.50) + ' ' + p(cx+W*.44,H*.64) + ' ' + p(cx+W*.30,H*.70) +
+    ' C' + p(cx+W*.38,H*.78) + ' ' + p(cx+W*.22,H*.83) + ' ' + p(cx+W*.06,H*.79) +
+    ' L' + p(cx-W*.22,H*.79) +
+    ' C' + p(cx-W*.38,H*.82) + ' ' + p(cx-W*.46,H*.72) + ' ' + p(cx-W*.38,H*.64) +
+    ' C' + p(cx-W*.50,H*.56) + ' ' + p(cx-W*.48,H*.40) + ' ' + p(cx-W*.34,H*.32) +
+    ' C' + p(cx-W*.44,H*.20) + ' ' + p(cx-W*.28,H*.08) + ' ' + p(cx-W*.14,H*.06) + 'Z',
+
+    // Wide oak
+    'M' + p(cx,H*.08) +
+    ' C' + p(cx+W*.28,0.01) + ' ' + p(cx+W*.58,H*.18) + ' ' + p(cx+W*.56,H*.42) +
+    ' C' + p(cx+W*.62,H*.54) + ' ' + p(cx+W*.52,H*.66) + ' ' + p(cx+W*.40,H*.72) +
+    ' C' + p(cx+W*.46,H*.80) + ' ' + p(cx+W*.32,H*.85) + ' ' + p(cx+W*.18,H*.81) +
+    ' L' + p(cx-W*.18,H*.81) +
+    ' C' + p(cx-W*.32,H*.85) + ' ' + p(cx-W*.46,H*.80) + ' ' + p(cx-W*.40,H*.72) +
+    ' C' + p(cx-W*.52,H*.66) + ' ' + p(cx-W*.62,H*.54) + ' ' + p(cx-W*.56,H*.42) +
+    ' C' + p(cx-W*.58,H*.18) + ' ' + p(cx-W*.28,0.01) + ' ' + p(cx,H*.08) + 'Z'
+  ];
+
+  var d = crownPaths[variant % 4];
+  var tx = cx - tw/2;
+
+  var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" fill="none" style="display:block;flex-shrink:0">';
+  // Shadow
+  svg += '<path fill="rgba(0,0,0,0.3)" transform="translate(' + (W*0.025) + ',' + (H*0.022) + ')" d="' + d + '"/>';
+  // Crown
+  svg += '<path fill="' + fill + '" d="' + d + '"/>';
+  // Highlight
+  svg += '<path fill="rgba(255,255,255,0.06)" d="M' + p(cx,H*.08) + ' C' + p(cx+W*.15,H*.02) + ' ' + p(cx+W*.28,H*.10) + ' ' + p(cx+W*.20,H*.22) + ' C' + p(cx+W*.05,H*.14) + ' ' + p(cx,H*.10) + ' ' + p(cx,H*.08) + 'Z"/>';
+  // Trunk
+  svg += '<path fill="' + trunk + '" d="M' + p(tx,H*.74) + ' C' + p(tx-tw*.3,H*.85) + ' ' + p(tx,H*.95) + ' ' + p(tx,H) + ' L' + p(tx+tw,H) + ' C' + p(tx+tw,H*.95) + ' ' + p(tx+tw+tw*.3,H*.85) + ' ' + p(tx+tw,H*.74) + ' C' + p(tx+tw+tw*.15,H*.68) + ' ' + p(cx+tw*.1,H*.72) + ' ' + p(cx,H*.74) + ' C' + p(cx-tw*.1,H*.72) + ' ' + p(tx-tw*.15,H*.68) + ' ' + p(tx,H*.74) + 'Z"/>';
+  svg += '</svg>';
+  return svg;
+}
+
+
+
+// APP INIT
+
+const PLAN=[
+{morning:{title:"Múdra myseľ – prvé stretnutie",dur:"6 min",method:"DBT · Vedomá myseľ",desc:"Múdra myseľ je priestor medzi čistou emóciou a čistou logikou. Pri každom nádychu si šepni 'múdra', pri výdychu 'myseľ'. Nechaj prísť odpoveď zvnútra.",type:"breathe"},
+noon:{title:"Prvý spúšťač dňa",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Situácia → Myšlienka → Emócia → Správanie. Dnes zachyť prvý článok reťaze.",type:"journal",prompt:"Situácia, ktorá ma dnes spustila: ___
+Moja automatická myšlienka bola: ___"},
+evening:{title:"Teplomer impulzov",dur:"5 min",method:"DBT · Škálovanie",desc:"Impulzy majú rôznu intenzitu (0–10). Spoznanie vlastnej škály je prvý krok k regulácii.",type:"slider",label:"Priemerná sila mojich impulzov dnes",left:"Slabé",right:"Veľmi silné"}},
+
+{morning:{title:"STOP – nácvik v pokoji",dur:"5 min",method:"DBT · Znášanie záťaže",desc:"Zastav sa fyzicky. Nadýchni sa (4 sekundy). Pozoruj čo cítiš bez hodnotenia. Konaj vedome. Precvič to teraz, keď je pokoj – aby si ho mala keď príde búrka.",type:"breathe"},
+noon:{title:"Zápisník myšlienok",dur:"5 min",method:"KBT · Denník myšlienok",desc:"Zachyť situáciu a automatickú myšlienku čo najpresnejšie.",type:"journal",prompt:"Situácia: ___
+Automatická myšlienka (prvé čo mi napadlo): ___"},
+evening:{title:"Rýchla alebo pomalá cesta",dur:"5 min",method:"Teória životnej histórie",desc:"Rýchla stratégia = okamžitá odmena. Pomalá = investícia. Kde si dnes bola?",type:"choice",question:"Môj prevažujúci spôsob dnes:",options:["Reagovala som automaticky","Urobila som aspoň 1 pauzu","Pauzu som použila vedome","Väčšinou som bola prítomná"]}},
+
+{morning:{title:"Skenovanie tela",dur:"7 min",method:"Všímavosť · MBSR",desc:"Pomaly presuň pozornosť od chodidiel nahor. Kde je napätie? Kde uvoľnenie? Len pozoruj, nemeň.",type:"breathe"},
+noon:{title:"Pomenovanie emócie",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Presné pomenovanie emócie znižuje jej intenzitu až o 50% podľa výskumu. Nie 'zle' – ale 'frustrácia', 'úzkosť', 'nuda'. Buď čo najpresnejšia.",type:"journal",prompt:"Impulz dnes: ___
+Emócia za ním (čo najpresnejšie): ___
+Sila (0–10): ___"},
+evening:{title:"Pozorovanie bez hodnotenia",dur:"5 min",method:"DBT · Bez hodnotenia",desc:"Popisuj fakty bez hodnotiacich prídavných mien. 'Reagovala som rýchlo' namiesto 'bola som zlá'. Vyskúšaj na dnešnom príklade.",type:"journal",prompt:"Dnešný moment opísaný BEZ hodnotiacich slov:"}},
+
+{morning:{title:"Dych 4–7–8",dur:"5 min",method:"Dychová technika",desc:"Nádych 4 sekundy – zadrž 7 sekúnd – výdych 8 sekúnd. Aktivuje parasympatický nervový systém rýchlejšie než štandardné dýchanie. 4 cykly.",type:"breathe"},
+noon:{title:"Over si fakty",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Emócie nie vždy zodpovedajú faktom. Prever jednu dnešnú reakciu: zodpovedá emócia skutočným faktom, alebo tvojej interpretácii?",type:"journal",prompt:"Situácia: ___ | Môj pocit: ___
+Skutočné fakty: ___ | Emócia zodpovedá faktom? ___"},
+evening:{title:"Impulz alebo vnútorný hlas?",dur:"5 min",method:"DBT · Múdra myseľ",desc:"Impulz je reaktívny a emočný. Vnútorný hlas je pokojný a hlboký. Dnešná rýchla reakcia bola:",type:"choice",question:"Moja dnešná rýchla reakcia bola:",options:["Čistý impulz – oľutovala som ho","Skôr impulz, nie úplne","Ťažko rozlíšiť","Skôr vnútorný hlas – cítila sa správne"]}},
+
+{morning:{title:"Zámer a plán keby–tak",dur:"6 min",method:"KBT · Zámer konania",desc:"'Ak nastane X, urobím Y.' Výskum ukazuje, že táto forma zvyšuje pravdepodobnosť správania o 200–300% oproti samotnému zámeru.",type:"journal",prompt:"Zámer na dnes: ___
+Keby–tak #1: Keby som pocítila ___, urobím ___.
+Keby–tak #2: Keby nastalo ___, urobím ___."},
+noon:{title:"Zámer v praxi",dur:"5 min",method:"KBT · Spätná väzba",desc:"Späť k rannému plánu. Fungoval? Spätná väzba uzatvára učebný cyklus.",type:"journal",prompt:"Môj ranný plán som (ne)použila, pretože...
+Čo by som príšti raz zmenila: ___"},
+evening:{title:"Prvý týždeň – vzorec",dur:"7 min",method:"DBT · Sledovací denník",desc:"Ešte nehodnotíme zmenu – len mapujeme vzorce.",type:"journal",prompt:"Vzorec, ktorý som tento týždeň spozorovala vo svojom impulzívnom správaní: ___"}},
+
+{morning:{title:"Predĺžený výdych",dur:"5 min",method:"Polyvagálna teória",desc:"Výdych dlhší než nádych stimuluje blúdivý nerv. Nádych 4 sekundy, výdych 6–8 sekúnd. 5 cyklov. Vedecky overená brzdná technika.",type:"breathe"},
+noon:{title:"Dôkazy pre a proti",dur:"6 min",method:"KBT · Denník myšlienok",desc:"Hľadaj dôkazy, ktoré tvoju automatickú myšlienku podporujú, aj také, ktoré ju vyvracajú. Cieľom nie je pozitivita, ale presnosť.",type:"journal",prompt:"Automatická myšlienka: ___
+Dôkazy, ktoré ju podporujú: ___
+Dôkazy, ktoré ju vyvracajú: ___"},
+evening:{title:"Priestor slobody",dur:"5 min",method:"Frankl",desc:"Medzi podnetom a reakciou je priestor – v ňom je naša sloboda.",type:"slider",label:"Priestor medzi podnetom a reakciou dnes",left:"Žiadny",right:"Vedomý"}},
+
+{morning:{title:"Plné ponorenie",dur:"6 min",method:"DBT · Všímavosť",desc:"Plne sa ponoriť do prítomnosti. Jedna ranná aktivita bez telefónu – úplne, s celou pozornosťou.",type:"breathe"},
+noon:{title:"List sebe spred týždňa",dur:"6 min",method:"KBT · Pohľad späť",desc:"Pohľad späť odhaľuje pokrok, ktorý nevidíme v reálnom čase.",type:"journal",prompt:"Drahá ja spred 7 dní... (čo si nevedela, čo teraz vieš)"},
+evening:{title:"Konkrétny cieľ za 23 dní",dur:"7 min",method:"KBT · Stanovovanie cieľov",desc:"Nie 'budem lepšia' – konkrétna, merateľná zmena.",type:"journal",prompt:"Za 30 dní by sa zmenilo konkrétne toto: ___
+Podľa čoho spoznám, že sa to zmenilo: ___"}},
+
+{morning:{title:"TIPP – Studená voda",dur:"5 min",method:"DBT · TIPP",desc:"Studená voda na tvár 30 sekúnd. Aktivuje potápačský reflex, spomaľuje srdce o 10–25%. Fyziologický reset nervovej sústavy.",type:"breathe"},
+noon:{title:"Reťaz správania",dur:"7 min",method:"DBT · Analýza reťaze",desc:"Rozober impulzívnu situáciu ako reťaz článkov. Každý článok je bod, kde sa dala zmeniť trasa.",type:"journal",prompt:"Udalosť → Myšlienka → Emócia → Telesný pocit → Správanie → Dôsledok"},
+evening:{title:"Môj najčastejší spúšťač",dur:"5 min",method:"KBT · Mapovanie spúšťačov",desc:"Po týždni pozorovania – čo sa opakuje?",type:"choice",question:"Môj najčastejší spúšťač impulzívnej reakcie:",options:["Nuda alebo prázdnota","Stres a tlak","Napätie vo vzťahoch","Neistota a strach"]}},
+
+{morning:{title:"Zámer s dychom",dur:"5 min",method:"Všímavosť + KBT",desc:"Pri každom výdychu si zopakuj ranný zámer. Nádych = prítomnosť, výdych = zámer. 5 cyklov.",type:"breathe"},
+noon:{title:"Preformulovanie myšlienky",dur:"6 min",method:"KBT · Reštrukturalizácia",desc:"'Vždy robím chyby' → 'Urobila som chybu v tejto situácii'. Presnosť, nie pozitivita.",type:"journal",prompt:"Pôvodná automatická myšlienka: ___
+Preformulovanie (presnejšie): ___"},
+evening:{title:"Teplomer vedomia",dur:"4 min",method:"DBT · Sledovanie",desc:"Každodenné meranie zachytáva trendy, ktoré inak nevidíme.",type:"slider",label:"Ako vedomá som bola dnes?",left:"Automatický pilot",right:"Plne prítomná"}},
+
+{morning:{title:"Predstavivosť zvládania",dur:"6 min",method:"KBT · Vizualizácia",desc:"Predstav si situáciu, kde reaguješ impulzívne. Prehraj ju INAK – s pauzou, s voľbou. Mozog neberie rozdiel medzi predstavou a realitou – skutočne tréninguješ.",type:"breathe"},
+noon:{title:"Opačný čin",dur:"5 min",method:"DBT · Regulácia emócií",desc:"Urob opak toho, čo ti emócia hovorí. Chceš uniknúť – priblíž sa. Chceš kričať – hovor ticho.",type:"journal",prompt:"Emócia: ___ | Jej príkaz (čo som chcela): ___
+Opačný čin: ___"},
+evening:{title:"10 dní – kde som?",dur:"6 min",method:"KBT · Pokrok",desc:"Navigácia, nie hodnotenie.",type:"slider",label:"Oproti dňu 1 – vnímam zmenu?",left:"Žiadna",right:"Citeľný posun"}},
+
+{morning:{title:"PROSBA – Fyzická základňa",dur:"6 min",method:"DBT · PROSBA",desc:"Liečba chorôb, Výživa, Vyhýbanie sa látkam, Spánok, Pohyb. Emocionálna regulácia závisí od fyzického stavu. Dnešný ranný zoznam.",type:"choice",question:"Môj fyzický základ dnes ráno:",options:["Dobre som spala (7+ hodín)","Zjedla som niečo výživné","Pohybovala som sa včera","Cítim sa fyzicky v poriadku"]},
+noon:{title:"Surfovanie na vlne túžby",dur:"7 min",method:"DBT · Zvládanie záťaže",desc:"Impulz je ako vlna – príde, dosiahne vrchol a odíde. Nikdy nesiahne na dno, ak na ňu neskočíš.",type:"journal",prompt:"Impulz: ___ | Kde v tele: ___
+Kedy bol najsilnejší: ___ | Čo sa stalo keď som odolala: ___"},
+evening:{title:"Vďačnosť za spomalenie",dur:"5 min",method:"Pozitívna psychológia",desc:"Hľadaj niečo, čo by si zmeškala na autopilote.",type:"journal",prompt:"Dnes som si vďaka spomaleniu všimla...
+Za čo som vďačná: ___"}},
+
+{morning:{title:"Popisovanie bez hodnotenia",dur:"5 min",method:"DBT · Všímavosť",desc:"Pomenuj čo vnímáš slovami, bez hodnotenia. 3 minúty tichého opisovania – len fakty.",type:"breathe"},
+noon:{title:"Hodnoty – môj kompas",dur:"6 min",method:"TAZ · Hodnotová orientácia",desc:"Pomalá stratégia žije podľa hodnôt, nie podľa nálad. Jasné hodnoty sú kompas, keď impulzy tlačia inam.",type:"journal",prompt:"Moje 3 najdôležitejšie hodnoty: 1.___ 2.___ 3.___
+Konala som dnes v súlade? ___"},
+evening:{title:"V súlade s hodnotami",dur:"5 min",method:"TAZ · Hodnoty",desc:"Každodenná reflexia uzatvára medzeru medzi tým, čo chceme a ako žijeme.",type:"slider",label:"Môj deň bol v súlade s mojimi hodnotami",left:"Vôbec nie",right:"Úplne áno"}},
+
+{morning:{title:"Jedna vec naraz",dur:"5 min",method:"DBT · Všímavosť",desc:"Jedna vec naraz, s plnou pozornosťou. Ranná aktivita bez telefónu – úplne prítomná.",type:"breathe"},
+noon:{title:"Navonok a vnútri",dur:"5 min",method:"DBT · Zhoda",desc:"Zhoda vonkajšieho a vnútorného je znak zdravej regulácie. Rýchla stratégia nás niekedy núti maskovať.",type:"choice",question:"Dnes som sa cítila:",options:["Pokojná navonok aj vnútri","Pokojná navonok, napätá vnútri","Napätá navonok aj vnútri","Vedome som spracovala napätie"]},
+evening:{title:"Dar budúcemu ja",dur:"6 min",method:"KBT · Budúce ja",desc:"Spojenie s budúcou verziou seba posilňuje dlhodobú orientáciu.",type:"journal",prompt:"Dnešný dar mojej budúcej verzii: ___
+Čo som urobila, za čo mi poďakuje: ___"}},
+
+{morning:{title:"Ukotvenie 5–4–3–2–1",dur:"6 min",method:"DBT · Ukotvenie",desc:"5 vecí čo VIDÍŠ → 4 čo POČUJEŠ → 3 čo MÔŽEŠ DOTKNÚŤ → 2 čo CÍTIŠ VÔŇOU → 1 CHUŤ. Preruší krúživé myslenie a privedie ťa do prítomnosti.",type:"breathe"},
+noon:{title:"Dôsledky v čase",dur:"6 min",method:"KBT · Časová perspektíva",desc:"Pomalá stratégia má dlhší horizont – tréningom si ho môžeš rozšíriť.",type:"journal",prompt:"Rozhodnutie: ___
+Za týždeň: ___ | Za rok: ___ | Za 5 rokov: ___"},
+evening:{title:"Dlhodobý radar",dur:"5 min",method:"Teória životnej histórie",desc:"Koniec druhého týždňa. Ako dlhý je tvoj myšlienkový horizont dnes?",type:"slider",label:"Môj myšlienkový horizont dnes",left:"Len tento moment",right:"Mesiace dopredu"}},
+
+{morning:{title:"Radikálne prijatie",dur:"7 min",method:"DBT · Znášanie záťaže",desc:"Nie súhlas – uznanie reality takej, aká je, bez boja. Boj zvyšuje utrpenie. Prijatie ho neznásobí.",type:"journal",prompt:"Vec, ktorú odmietam prijať: ___
+Čo by sa zmenilo keby som ju prijala: ___"},
+noon:{title:"Najúčinnejší nástroj",dur:"5 min",method:"DBT · Prehľad techník",desc:"Po dvoch týždňoch – ktorá technika ti naozaj fungovala?",type:"choice",question:"Technika, ktorá mi pomohla najviac:",options:["STOP / pauza pred reakciou","Over si fakty","Skenovanie tela / dýchanie","Zápisník / denník myšlienok"]},
+evening:{title:"Malé víťazstvo",dur:"5 min",method:"Pozitívna psychológia",desc:"Mozog sa učí rýchlejšie cez odmenu. Každé malé víťazstvo si zaslúži uznanie.",type:"journal",prompt:"Dnešné malé víťazstvo: ___
+Na seba som hrdá, pretože: ___"}},
+
+{morning:{title:"TIPP – Intenzívny pohyb",dur:"7 min",method:"DBT · TIPP",desc:"7 minút aeróbneho pohybu znižuje kortizol a zvyšuje GABA. Tanec, skákanie, rýchla chôdza.",type:"breathe"},
+noon:{title:"Kritický hlas a súcit",dur:"6 min",method:"KBT · Seba-súcit",desc:"Sebakritika je tiež impulz – rýchla, automatická. Ako by si reagovala, keby toto isté povedala kamarátke?",type:"journal",prompt:"Kritický hlas dnes: ___
+Keby to povedala kamarátka: ___
+Pre seba napíšem: ___"},
+evening:{title:"Seba-súcit",dur:"5 min",method:"Neff · Seba-súcit",desc:"Bez súcitu je sebaregulácia sebatrestanie.",type:"slider",label:"Ako láskavá som bola k sebe dnes?",left:"Veľmi prísna",right:"Veľmi láskavá"}},
+
+{morning:{title:"Pozorovanie myšlienok",dur:"5 min",method:"DBT · Všímavosť",desc:"Myšlienky sú ako oblaky – prichádzajú a odchádzajú. Ty si obloha, nie oblaky.",type:"breathe"},
+noon:{title:"Vzťahové impulzy",dur:"5 min",method:"DBT · Medziľudské vzťahy",desc:"Rýchla stratégia ovplyvňuje vzťahy – potreba okamžitého schválenia, strach z odmietnutia.",type:"choice",question:"Vo vzťahoch dnes som:",options:["Reagovala automaticky na ostatných","Potrebovala okamžité schválenie","Vedome zvolila odpoveď","Bola autentická a pokojná"]},
+evening:{title:"Asertívna komunikácia – príprava",dur:"6 min",method:"DBT · Medziľudské vzťahy",desc:"Opíš, Vyjadri, Trvaj na svojom, Posilni, Všímavo, Sebavedome, Vyjednaj. Premysli situáciu, kde potrebuješ niečo požiadať alebo povedať nie.",type:"journal",prompt:"Situácia kde túto techniku potrebujem: ___
+Opíš fakty: ___ | Vyjadri pocit: ___ | Požiadaj o: ___"}},
+
+{morning:{title:"Zámer pre vzťah",dur:"5 min",method:"DBT · GIVE",desc:"Jemne, so záujmom, s uznaním, ľahko. Vyber jeden vzťah a vstúp doň s týmto zámerom.",type:"journal",prompt:"Vzťah s týmto zámerom: ___
+Konkrétne čo urobím inak: ___"},
+noon:{title:"Čas a vedomie",dur:"5 min",method:"Wittmann · Čas",desc:"Keď spomaľujeme, máme pocit väčšieho časového priestoru. Výskum to potvrdzuje.",type:"slider",label:"Ako sa dnes cítil čas?",left:"Utekal",right:"Bol môj"},
+evening:{title:"Tri dôležité veci",dur:"6 min",method:"Eisenhower · Dôležité vs. urgentné",desc:"Rýchla stratégia reaguje na urgentné. Pomalá sa stará o dôležité.",type:"journal",prompt:"Tri dôležité (nie urgentné) veci, ktoré čakajú:
+1.___ 2.___ 3.___"}},
+
+{morning:{title:"Vážiť výhody a nevýhody",dur:"6 min",method:"DBT · Znášanie záťaže",desc:"Racionálna analýza aktivuje rozumovú myseľ počas emočných búrok. Precvič na príklade.",type:"journal",prompt:"Impulz: ___
+Výhody ak ho poslúchnem: ___ | Nevýhody: ___
+Výhody ak odolám: ___ | Nevýhody: ___"},
+noon:{title:"Čo mi dáva dlhodobú energiu",dur:"5 min",method:"TAZ · Hodnoty",desc:"Energie, ktoré pretrvávajú, sú zakotvené v hodnotách, nie v impulzoch.",type:"choice",question:"Čo mi dáva naozaj dlhodobú energiu?",options:["Pohyb a telo","Ticho a príroda","Hlboké vzťahy","Tvorivosť a rast"]},
+evening:{title:"Semeno na zajtrajšok",dur:"5 min",method:"Teória životnej histórie",desc:"Pomalá stratégia sadí stromy. Aké malé semeno zasadíš dnes?",type:"journal",prompt:"Jedna malá vec pre zajtrajšok: ___"}},
+
+{morning:{title:"Budovanie majstrovstva",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Niečo, v čom sa zlepšuješ každý deň. Pocit kompetencie znižuje emocionálnu reaktivitu.",type:"journal",prompt:"Niečo malé, v čom sa dnes zlepším: ___"},
+noon:{title:"Môj les dnes",dur:"5 min",method:"Metafora",desc:"Metafora otvára prístup k vnútornému stavu, ktorý sa ťažko pomenúva priamo.",type:"choice",question:"Môj vnútorný svet dnes je ako:",options:["Pokojný les po daždi","Hmlisté ráno","Vietor v korunách","Jasný slnečný deň"]},
+evening:{title:"Odputovanie od myšlienky",dur:"7 min",method:"TAZ · Odputovanie",desc:"Vzorce, ktoré nám viac neslúžia, môžeme vedome odložiť – nie potlačiť.",type:"journal",prompt:"Vzorec, ktorý nechcem ďalej niesť: ___
+Čo by ho nahradilo: ___"}},
+
+{morning:{title:"Tri týždne – múdra myseľ",dur:"7 min",method:"DBT · Múdra myseľ",desc:"Ani čisto emočná, ani čisto racionálna. Hlboká pokojná znalosť seba samej po troch týždňoch.",type:"breathe"},
+noon:{title:"Impulz alebo vnútorný hlas – hlbšie",dur:"6 min",method:"DBT · Múdra myseľ",desc:"Impulz vychádza z emočnej mysle. Vnútorný hlas z múdrej mysle. Po troch týždňoch vieš lepšie rozlíšiť?",type:"journal",prompt:"Impulz dnes: ___ | Emócia: ___
+Vnútorný hlas: ___ | Pocit: ___
+Rozdiel, ktorý vnímam: ___"},
+evening:{title:"Vďaka svojej rýchlosti",dur:"6 min",method:"TAZ · Seba-súcit",desc:"Rýchla stratégia ťa chránila. Bola adaptívna. Môžeš jej poďakovať a zároveň zvoliť inak.",type:"journal",prompt:"Moja rýchlosť mi pomohla keď...
+Ďakujem ti za...
+Teraz volím inak, pretože..."}},
+
+{morning:{title:"TIPP – Rytmické dýchanie",dur:"6 min",method:"DBT · TIPP",desc:"5–6 nádychov za minútu aktivuje srdcovú variabilitu – ukazovateľ emocionálnej regulácie. Nádych 5 sekúnd, výdych 5 sekúnd. 6 cyklov.",type:"breathe"},
+noon:{title:"Zmena za tri týždne",dur:"6 min",method:"KBT · Prehľad pokroku",desc:"Len pozorovanie, nie hodnotenie. Čo sa zmenilo?",type:"journal",prompt:"Myšlienky: ___ | Emócie: ___ | Správanie: ___
+Najväčšia zmena: ___"},
+evening:{title:"Moje nástroje ďalej",dur:"5 min",method:"DBT · Udržanie zmeny",desc:"Ktoré techniky budeš používať aj po skončení?",type:"choice",question:"Beriem si ďalej:",options:["STOP / dýchanie","Zápisník / denník myšlienok","Over si fakty","Surfovanie na vlne / Radikálne prijatie"]}},
+
+{morning:{title:"Tri veci vďačnosti",dur:"5 min",method:"Pozitívna psychológia",desc:"Konkrétnosť je kľúčová – nie 'rodina', ale konkrétny moment.",type:"journal",prompt:"3 konkrétne veci za ktoré som dnes vďačná:
+1.___ 2.___ 3.___"},
+noon:{title:"Budúcnosť je živá",dur:"5 min",method:"KBT · Orientácia na budúcnosť",desc:"Pomalá stratégia má živý vzťah s budúcnosťou – nie abstrakciu.",type:"slider",label:"Budúcnosť je pre mňa dnes",left:"Vzdialená, hmlistá",right:"Konkrétna, živá"},
+evening:{title:"List sebe za rok",dur:"8 min",method:"KBT · List budúcemu ja",desc:"Čo chceš, aby o tomto období vedela tvoja verzia za rok?",type:"journal",prompt:"Drahá ja za rok..."}},
+
+{morning:{title:"Prijatie aj zmena",dur:"6 min",method:"DBT · Dialektika",desc:"'Prijímaš sa taká aká si A chceš sa zmeniť.' Obe pravdy súčasne. 3 nádychy s prijatím, 3 so zámerom.",type:"breathe"},
+noon:{title:"Čo si nesiem ďalej",dur:"6 min",method:"TAZ · Záväzok",desc:"Záväzok je smer, nie sľub dokonalosti.",type:"journal",prompt:"Nesiem si: ___ | Nechávam tu: ___
+Môj smer: ___"},
+evening:{title:"Les – vtedy a teraz",dur:"6 min",method:"Naratívna reflexia",desc:"Záverečná metafora vnútorného priestoru.",type:"journal",prompt:"Na začiatku bol môj vnútorný les...
+Dnes je...
+Zmenilo sa: ___"}},
+
+{morning:{title:"Posledná pätica",dur:"5 min",method:"TAZ · Zámer",desc:"Nie 'budem dokonalá' – 'budem smerovať k...' Zámer je smer.",type:"journal",prompt:"Posledných 5 dní smerujem k: ___
+Jeden spôsob ako: ___"},
+noon:{title:"Voľba alebo reaktivita",dur:"5 min",method:"Teória životnej histórie + DBT",desc:"Základná premisa: viac voľby v reakciách, menej automatiky.",type:"slider",label:"Mám viac voľby ako pred 25 dňami?",left:"Rovnako ako predtým",right:"Oveľa viac"},
+evening:{title:"Udržateľnosť",dur:"5 min",method:"DBT · Udržanie zmeny",desc:"Udržateľnosť, nie hrdinstvo. Čo dokážeš robiť každý deň?",type:"choice",question:"Toto zvládnem robiť každý deň:",options:["Ranné dýchanie (2–5 min)","Krátky zápisník","Pauza pred reakciami","Večerná vďačnosť"]}},
+
+{morning:{title:"Postupné uvoľňovanie svalov",dur:"7 min",method:"PMR · Jacobson",desc:"Napni svalovú skupinu 5 sekúnd, uvoľni. Chodidlá → lýtka → stehná → brucho → ruky → ramená → tvár. Fyzická verzia 'pusti to'.",type:"breathe"},
+noon:{title:"Odkaz budúcim začiatkom",dur:"6 min",method:"KBT · Pohľad späť",desc:"Keby si začínala znova – čo by si robila inak?",type:"journal",prompt:"Budúcej sebe začínajúcej podobný proces:
+___
+Najdôležitejšia vec: ___"},
+evening:{title:"Pred záverom",dur:"6 min",method:"Reflexia",desc:"Pomenúvaj presne, bez hodnotenia.",type:"slider",label:"Cítim sa pred záverom",left:"Rovnako ako vždy",right:"Hlboko odlišne"}},
+
+{morning:{title:"Konaj účinne",dur:"5 min",method:"DBT · Všímavosť",desc:"Rob to, čo funguje v danej situácii – nie to čo je 'správne'. Nechaj ego bokom, konaj v prospech skutočného cieľa.",type:"breathe"},
+noon:{title:"Môj záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru, keď sa stratíš.",type:"journal",prompt:"Každý deň budem ___.
+Keď sa stratím, vrátim sa k ___.
+Robím to pretože: ___."},
+evening:{title:"Dnešný les",dur:"5 min",method:"Metafora",desc:"Každý deň je iný – aj v lese.",type:"choice",question:"Dnešný vnútorný les:",options:["Pokojný a hlboký","Pohyblivý, premenlivý","Hmlistý, nejasný","Otvorený a svetlý"]}},
+
+{morning:{title:"Hromadenie príjemného",dur:"6 min",method:"DBT · Regulácia emócií",desc:"Vedome plánuj príjemné aktivity – nie len čakaj na ne.",type:"journal",prompt:"7 malých príjemných vecí na ďalší týždeň:
+Po:___ Ut:___ St:___ Šv:___ Pi:___ So:___ Ne:___"},
+noon:{title:"Reťazenie návykov",dur:"5 min",method:"Behaviorálna psychológia",desc:"'Po X vždy Y.' Naviazanie nového správania na existujúci zvyk zvyšuje úspešnosť o 80%.",type:"journal",prompt:"Reťaz #1: Po ___ vždy ___.
+Reťaz #2: Keď pocítim ___, vždy ___."},
+evening:{title:"Dlhý pohľad",dur:"6 min",method:"Teória životnej histórie",desc:"Pomalá stratégia je o dlhom pohľade.",type:"slider",label:"Môj pohľad na seba a budúcnosť",left:"Krátky, reaktívny",right:"Dlhý, zámerný"}},
+
+{morning:{title:"Posledné ráno",dur:"6 min",method:"Múdra myseľ + ticho",desc:"Bez plánu, bez zámeru. Len byť. Les nerastie pretože sa snaží – rastie pretože je.",type:"breathe"},
+noon:{title:"Čo mi trvá zmeniť",dur:"6 min",method:"KBT · Úprimný pohľad",desc:"Čestnosť o pretrvávajúcich vzorcoch je základ ďalšej práce.",type:"journal",prompt:"Vzorec, ktorý pretrváva: ___
+Prečo je taký tvrdý: ___
+Môj ďalší krok: ___"},
+evening:{title:"Celková zmena",dur:"5 min",method:"Záverečná reflexia",desc:"Posledné meranie.",type:"slider",label:"Celková zmena za 29 dní",left:"Rovnako ako na začiatku",right:"Výrazná zmena"}},
+
+{morning:{title:"30 dní – brána ostáva otvorená",dur:"8 min",method:"Integrácia",desc:"Posledný deň nie je koniec – je bod, kde sa zastavuješ a pozrieš späť. Les bol tu pred tebou a bude tu aj po. Napíš, čo si našla.",type:"journal",prompt:"30 dní v lese ma naučilo...
+Najdôležitejšia vec, ktorú som objavila o sebe: ...
+Smer, ktorým idem ďalej: ..."},
+noon:{title:"Záverečný záväzok",dur:"7 min",method:"TAZ · Záväzok",desc:"Záväzok je opakované rozhodnutie vracať sa k smeru.",type:"journal",prompt:"Každý deň budem ___.
+Keď sa stratím, vrátim sa k ___.
+Robím to pretože mi na tom záleží: ___."},
+evening:{title:"Záverečné slovo",dur:"10 min",method:"",desc:"Posledná strana. Napíš čokoľvek – sebe, tomuto procesu, tejto verzii seba. Bez pravidiel.",type:"journal",prompt:"Záverečné slovo..."}}
+];
+
+
+// STATE
+let S={};
+try{S=JSON.parse(localStorage.getItem('les30')||'{}');}catch(e){}
+function save(){try{localStorage.setItem('les30',JSON.stringify(S));}catch(e){}}
+
+function slotIdx(h){return h<10.5?0:h<15.5?1:2}
+function sName(i){return['morning','noon','evening'][i]}
+function sLabel(i){return['🌿 Ráno','☀️ Obed','🌙 Večer'][i]}
+function sTime(i){return['08:00','13:00','18:00'][i]}
+
+function getCurrent(){
+  const now=new Date();
+  const cur=slotIdx(now.getHours()+now.getMinutes()/60);
+  for(let d=0;d<30;d++)for(let s=0;s<3;s++)if(!S[`d${d}s${s}`])return{day:d,slot:s,cur};
+  return{day:-1,slot:-1,cur};
+}
+
+function available(day,slot,cur){
+  if(slot>cur)return false;
+  for(let d=0;d<day;d++)for(let s=0;s<3;s++)if(!S[`d${d}s${s}`])return false;
+  for(let s=0;s<slot;s++)if(!S[`d${day}s${s}`])return false;
+  return true;
+}
+
+function countDone(){let c=0;for(let d=0;d<30;d++)for(let s=0;s<3;s++)if(S[`d${d}s${s}`])c++;return c;}
+
+// RENDER
+function render(){
+  const{day,slot,cur}=getCurrent();
+  const done=countDone();
+  const now=new Date();
+  document.getElementById('timeEl').textContent=now.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dayEl').textContent=day>=0?`Deň ${day+1} / 30`:'Dokončené';
+  document.getElementById('pCount').textContent=`${done} / 90`;
+  document.getElementById('pFill').style.width=(done/90*100)+'%';
+  const rEl=document.getElementById('rings');
+  rEl.innerHTML='';
+  for(let d=0;d<30;d++){
+    const el=document.createElement('div');
+    const allD=S[`d${d}s0`]&&S[`d${d}s1`]&&S[`d${d}s2`];
+    el.className='ring'+(allD?' done':d===day?' active':'');
+    rEl.appendChild(el);
+  }
+  const main=document.getElementById('main');
+  if(day===-1){main.innerHTML=`<div class="alldone"><span class="ad-sym">✦</span><h2>30 dní v lese</h2><p>Dokončila si celý plán.<br>Les ťa naučil to, čo si potrebovala vedieť.<br>Brána ostáva otvorená.</p></div>`;return;}
+  const task=PLAN[day][sName(slot)];
+  if(!available(day,slot,cur)){main.innerHTML=`<div class="locked"><span class="l-glyph">✦</span><h3>Les čaká</h3><p>Ďalšia aktivita sa otvorí, keď príde jej čas.</p><div class="l-next">${sLabel(slot)} · ${sTime(slot)}</div></div>`;return;}
+  main.innerHTML=buildCard(task,slot,day);
+  bCycles=0;bTimer=null;picked=null;
+}
+
+function buildCard(task,slot,day){
+  let ix='';
+  if(task.type==='breathe'){
+    ix=`<div class="ix"><div class="ix-lbl">Cvičenie</div><div class="bwrap"><div class="bring" id="bR"><span class="bword" id="bW">nádych</span></div><div class="binstr" id="bI">Stlač štart</div><button class="bstart" id="bB" onclick="startB()">Začať</button></div></div>`;
+  }else if(task.type==='journal'){
+    ix=`<div class="ix"><div class="ix-lbl">Zápisník</div><textarea id="jT" placeholder="${task.prompt}" rows="4"></textarea></div>`;
+  }else if(task.type==='slider'){
+    ix=`<div class="ix"><div class="ix-lbl">${task.label}</div><div class="scol"><div class="sval" id="sV">5</div><input type="range" id="sI" min="1" max="10" value="5" oninput="document.getElementById('sV').textContent=this.value"><div class="sends"><span>${task.left}</span><span>${task.right}</span></div></div></div>`;
+  }else if(task.type==='choice'){
+    ix=`<div class="ix"><div class="ix-lbl">${task.question}</div><div class="cgrid">${task.options.map((o,i)=>`<button class="copt" id="c${i}" onclick="pick(${i})">${o}</button>`).join('')}</div></div>`;
+  }
+  return`<div class="card"><div class="badge">${sLabel(slot)} &nbsp;·&nbsp; Deň ${day+1}</div><h2>${task.title}</h2><div class="dur">⏱ ${task.dur}</div>${task.method?`<span class="method-tag">${task.method}</span>`:''}<p class="desc">${task.desc}</p>${ix}<button class="done-btn" onclick="complete(${day},${slot})">Dokončiť aktivitu</button></div>`;
+}
+
+// BREATHE
+let bTimer=null,bCycles=0;
+function startB(){
+  if(bTimer)return;
+  const btn=document.getElementById('bB');
+  if(btn)btn.disabled=true;
+  bCycles=0;
+  function cycle(){
+    const r=document.getElementById('bR'),w=document.getElementById('bW'),ins=document.getElementById('bI');
+    if(!r)return;
+    w.textContent='nádych';r.classList.add('ex');ins.textContent='Nadýchni sa pomaly...';
+    bTimer=setTimeout(()=>{
+      const ins2=document.getElementById('bI');if(!ins2)return;
+      ins2.textContent='Zadrž...';
+      bTimer=setTimeout(()=>{
+        const r2=document.getElementById('bR'),w2=document.getElementById('bW'),ins3=document.getElementById('bI');
+        if(!r2)return;
+        r2.classList.remove('ex');w2.textContent='výdych';ins3.textContent='Vydýchni pomaly...';
+        bTimer=setTimeout(()=>{
+          bCycles++;
+          if(bCycles<4)cycle();
+          else{const i=document.getElementById('bI'),w3=document.getElementById('bW');if(i){i.textContent='✓ Hotovo';w3.textContent='✓';}bTimer=null;}
+        },6000);
+      },2000);
+    },4000);
+  }
+  cycle();
+}
+
+// CHOICE
+let picked=null;
+function pick(i){picked=i;document.querySelectorAll('.copt').forEach((b,j)=>b.classList.toggle('picked',j===i));}
+
+// COMPLETE
+function complete(day,slot){
+  S[`d${day}s${slot}`]=true;save();
+  const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
+  bTimer=null;
+  setTimeout(render,900);
+}
+
+// NOTIFICATIONS
+function reqNotif(){
+  if(!('Notification'in window))return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      const btn=document.getElementById('notifBtn');
+      btn.textContent='✓ Aktívne';btn.classList.add('ok');btn.disabled=true;
+      schedNotif();
+    }
+  });
+}
+function schedNotif(){
+  [{h:8,l:'🌿 Ráno',m:'Tvoja ranná aktivita čaká v lese.'},{h:13,l:'☀️ Obed',m:'Čas na obednú reflexiu.'},{h:18,l:'🌙 Večer',m:'Večerná aktivita ťa čaká.'}]
+  .forEach(({h,l,m})=>{
+    function nx(){const t=new Date();t.setHours(h,0,0,0);if(t<=new Date())t.setDate(t.getDate()+1);setTimeout(()=>{if(Notification.permission==='granted')new Notification(`Les – ${l}`,{body:m});nx();},t-new Date());}
+    nx();
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  ILLUSTRATED MULTI-PLANE FOREST
+//  5 layers, Bézier SVG stromy, 5 statických vrstiev
+// ═══════════════════════════════════════════════════════
+
+
+render();
+
+(function(){
+  var e = document.getElementById('timeEl');
+  if(e){ var n=new Date(); e.textContent=n.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'}); }
+})();
+
+if(Notification.permission==='granted'){
+  var nb=document.getElementById('notifBtn');
+  if(nb){nb.textContent='✓ Aktívne';nb.classList.add('ok');nb.disabled=true;}
+  schedNotif();
+}
+setInterval(function(){
+  var e=document.getElementById('timeEl');
+  if(e){var n=new Date();e.textContent=n.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}
+},30000);
+
+
+// ═══════════════════════════════════════════════════════════════════
+// MULTI-PLANE FOREST – Bambi multi-plane camera technique
+// 5 parallax layers, organic SVG trees, light rays, floating particles
+// ═══════════════════════════════════════════════════════════════════
+
+// ── SVG tree crown shapes – 4 hand-drawn Bezier variants ──────────
+function crownPath(W, H, variant, fill, shadowFill) {
+  // W = tree width, H = tree total height
+  // Crown occupies top 78% of H, trunk the bottom 22%
+  const ch = H * 0.78;  // crown height
+  const cx = W / 2;     // center x
+
+  const paths = {
+    // 1: Tall conifer – layered triangles, asymmetric
+    conifer: `
+      <g>
+        <!-- shadow layer offset -->
+        <path d="M${cx} ${H*0.04}
+          C${W*0.56} ${H*0.06} ${W*0.82} ${H*0.20} ${W*0.74} ${H*0.28}
+          C${W*0.90} ${H*0.24} ${W*0.94} ${H*0.36} ${W*0.80} ${H*0.42}
+          C${W*0.96} ${H*0.40} ${W*0.98} ${H*0.52} ${W*0.84} ${H*0.56}
+          C${W*0.97} ${H*0.56} ${W*0.96} ${H*0.66} ${W*0.82} ${H*0.70}
+          C${W*0.90} ${H*0.74} ${W*0.86} ${H*0.80} ${W*0.74} ${H*0.78}
+          L${cx+2} ${H*0.78} L${cx-2} ${H*0.78}
+          C${W*0.26} ${H*0.80} ${W*0.14} ${H*0.74} ${W*0.18} ${H*0.70}
+          C${W*0.04} ${H*0.66} ${W*0.03} ${H*0.56} ${W*0.16} ${H*0.56}
+          C${W*0.02} ${H*0.52} ${W*0.04} ${H*0.40} ${W*0.20} ${H*0.42}
+          C${W*0.06} ${H*0.36} ${W*0.10} ${H*0.24} ${W*0.26} ${H*0.28}
+          C${W*0.18} ${H*0.20} ${W*0.44} ${H*0.06} ${cx} ${H*0.04}Z"
+          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
+        <!-- main crown -->
+        <path d="M${cx} ${H*0.04}
+          C${W*0.56} ${H*0.06} ${W*0.82} ${H*0.20} ${W*0.74} ${H*0.28}
+          C${W*0.90} ${H*0.24} ${W*0.94} ${H*0.36} ${W*0.80} ${H*0.42}
+          C${W*0.96} ${H*0.40} ${W*0.98} ${H*0.52} ${W*0.84} ${H*0.56}
+          C${W*0.97} ${H*0.56} ${W*0.96} ${H*0.66} ${W*0.82} ${H*0.70}
+          C${W*0.90} ${H*0.74} ${W*0.86} ${H*0.80} ${W*0.74} ${H*0.78}
+          L${cx+2} ${H*0.78} L${cx-2} ${H*0.78}
+          C${W*0.26} ${H*0.80} ${W*0.14} ${H*0.74} ${W*0.18} ${H*0.70}
+          C${W*0.04} ${H*0.66} ${W*0.03} ${H*0.56} ${W*0.16} ${H*0.56}
+          C${W*0.02} ${H*0.52} ${W*0.04} ${H*0.40} ${W*0.20} ${H*0.42}
+          C${W*0.06} ${H*0.36} ${W*0.10} ${H*0.24} ${W*0.26} ${H*0.28}
+          C${W*0.18} ${H*0.20} ${W*0.44} ${H*0.06} ${cx} ${H*0.04}Z"
+          fill="${fill}"/>
+        <!-- highlight top -->
+        <path d="M${cx} ${H*0.04} C${W*0.52} ${H*0.06} ${W*0.65} ${H*0.14} ${W*0.60} ${H*0.20} C${W*0.50} ${H*0.12} ${W*0.45} ${H*0.08} ${cx} ${H*0.04}Z"
+          fill="rgba(255,255,255,0.07)"/>
+      </g>`,
+
+    // 2: Round deciduous – full organic crown
+    deciduous: `
+      <g>
+        <path d="M${cx} ${H*0.06}
+          C${W*0.72} ${H*0.02} ${W*0.97} ${H*0.18} ${W*0.96} ${H*0.38}
+          C${W*1.02} ${H*0.52} ${W*0.92} ${H*0.66} ${W*0.82} ${H*0.73}
+          C${W*0.88} ${H*0.80} ${W*0.76} ${H*0.83} ${W*0.64} ${H*0.80}
+          L${W*0.36} ${H*0.80}
+          C${W*0.24} ${H*0.83} ${W*0.12} ${H*0.80} ${W*0.18} ${H*0.73}
+          C${W*0.08} ${H*0.66} ${W*-0.02} ${H*0.52} ${W*0.04} ${H*0.38}
+          C${W*0.03} ${H*0.18} ${W*0.28} ${H*0.02} ${cx} ${H*0.06}Z"
+          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
+        <path d="M${cx} ${H*0.06}
+          C${W*0.72} ${H*0.02} ${W*0.97} ${H*0.18} ${W*0.96} ${H*0.38}
+          C${W*1.02} ${H*0.52} ${W*0.92} ${H*0.66} ${W*0.82} ${H*0.73}
+          C${W*0.88} ${H*0.80} ${W*0.76} ${H*0.83} ${W*0.64} ${H*0.80}
+          L${W*0.36} ${H*0.80}
+          C${W*0.24} ${H*0.83} ${W*0.12} ${H*0.80} ${W*0.18} ${H*0.73}
+          C${W*0.08} ${H*0.66} ${W*-0.02} ${H*0.52} ${W*0.04} ${H*0.38}
+          C${W*0.03} ${H*0.18} ${W*0.28} ${H*0.02} ${cx} ${H*0.06}Z"
+          fill="${fill}"/>
+        <path d="M${cx} ${H*0.06} C${W*0.65} ${H*0.02} ${W*0.82} ${H*0.14} ${W*0.78} ${H*0.26} C${W*0.64} ${H*0.10} ${W*0.52} ${H*0.06} ${cx} ${H*0.06}Z"
+          fill="rgba(255,255,255,0.08)"/>
+      </g>`,
+
+    // 3: Asymmetric leaning – wind-swept
+    leaning: `
+      <g>
+        <path d="M${W*0.44} ${H*0.05}
+          C${W*0.66} ${H*-0.01} ${W*1.00} ${H*0.14} ${W*0.97} ${H*0.36}
+          C${W*1.04} ${H*0.48} ${W*0.92} ${H*0.62} ${W*0.80} ${H*0.70}
+          C${W*0.88} ${H*0.78} ${W*0.74} ${H*0.82} ${W*0.60} ${H*0.78}
+          L${W*0.38} ${H*0.78}
+          C${W*0.18} ${H*0.80} ${W*0.04} ${H*0.72} ${W*0.10} ${H*0.64}
+          C${W*-0.02} ${H*0.54} ${W*0.02} ${H*0.40} ${W*0.16} ${H*0.34}
+          C${W*0.06} ${H*0.22} ${W*0.22} ${H*0.08} ${W*0.44} ${H*0.05}Z"
+          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
+        <path d="M${W*0.44} ${H*0.05}
+          C${W*0.66} ${H*-0.01} ${W*1.00} ${H*0.14} ${W*0.97} ${H*0.36}
+          C${W*1.04} ${H*0.48} ${W*0.92} ${H*0.62} ${W*0.80} ${H*0.70}
+          C${W*0.88} ${H*0.78} ${W*0.74} ${H*0.82} ${W*0.60} ${H*0.78}
+          L${W*0.38} ${H*0.78}
+          C${W*0.18} ${H*0.80} ${W*0.04} ${H*0.72} ${W*0.10} ${H*0.64}
+          C${W*-0.02} ${H*0.54} ${W*0.02} ${H*0.40} ${W*0.16} ${H*0.34}
+          C${W*0.06} ${H*0.22} ${W*0.22} ${H*0.08} ${W*0.44} ${H*0.05}Z"
+          fill="${fill}"/>
+        <path d="M${W*0.44} ${H*0.05} C${W*0.58} ${H*0.01} ${W*0.76} ${H*0.12} ${W*0.72} ${H*0.24} C${W*0.60} ${H*0.08} ${W*0.48} ${H*0.05} ${W*0.44} ${H*0.05}Z"
+          fill="rgba(255,255,255,0.07)"/>
+      </g>`,
+
+    // 4: Wide oak – broad spreading crown
+    oak: `
+      <g>
+        <path d="M${cx} ${H*0.08}
+          C${W*0.80} ${H*0.01} ${W*1.08} ${H*0.18} ${W*1.04} ${H*0.40}
+          C${W*1.10} ${H*0.53} ${W*0.98} ${H*0.66} ${W*0.86} ${H*0.73}
+          C${W*0.92} ${H*0.81} ${W*0.78} ${H*0.84} ${W*0.64} ${H*0.80}
+          L${W*0.36} ${H*0.80}
+          C${W*0.22} ${H*0.84} ${W*0.08} ${H*0.81} ${W*0.14} ${H*0.73}
+          C${W*0.02} ${H*0.66} ${W*-0.10} ${H*0.53} ${W*-0.04} ${H*0.40}
+          C${W*-0.08} ${H*0.18} ${W*0.20} ${H*0.01} ${cx} ${H*0.08}Z"
+          fill="${shadowFill}" opacity="0.5" transform="translate(2,3)"/>
+        <path d="M${cx} ${H*0.08}
+          C${W*0.80} ${H*0.01} ${W*1.08} ${H*0.18} ${W*1.04} ${H*0.40}
+          C${W*1.10} ${H*0.53} ${W*0.98} ${H*0.66} ${W*0.86} ${H*0.73}
+          C${W*0.92} ${H*0.81} ${W*0.78} ${H*0.84} ${W*0.64} ${H*0.80}
+          L${W*0.36} ${H*0.80}
+          C${W*0.22} ${H*0.84} ${W*0.08} ${H*0.81} ${W*0.14} ${H*0.73}
+          C${W*0.02} ${H*0.66} ${W*-0.10} ${H*0.53} ${W*-0.04} ${H*0.40}
+          C${W*-0.08} ${H*0.18} ${W*0.20} ${H*0.01} ${cx} ${H*0.08}Z"
+          fill="${fill}"/>
+        <path d="M${cx} ${H*0.08} C${W*0.68} ${H*0.02} ${W*0.88} ${H*0.16} ${W*0.84} ${H*0.30} C${W*0.72} ${H*0.10} ${W*0.55} ${H*0.07} ${cx} ${H*0.08}Z"
+          fill="rgba(255,255,255,0.08)"/>
+      </g>`
+  };
+
+  const variants = ['conifer','deciduous','leaning','oak'];
+  return paths[variants[variant % 4]];
+}
+
+function makeTrunk(W, H) {
+  const tw = Math.max(4, W * 0.10);
+  const tx = W/2 - tw/2;
+  return `<path d="M${tx} ${H*0.75}
+    C${tx-tw*0.4} ${H*0.82} ${tx-tw*0.2} ${H*0.94} ${tx} ${H}
+    L${tx+tw} ${H}
+    C${tx+tw+tw*0.2} ${H*0.94} ${tx+tw+tw*0.4} ${H*0.82} ${tx+tw} ${H*0.75}Z"
+    fill="#2A0E04" opacity="0.95"/>
+  <path d="M${tx+tw*0.3} ${H*0.75} C${tx+tw*0.2} ${H*0.88} ${tx+tw*0.25} ${H} ${tx+tw*0.3} ${H}
+    L${tx+tw*0.5} ${H} C${tx+tw*0.5} ${H*0.95} ${tx+tw*0.45} ${H*0.82} ${tx+tw*0.3} ${H*0.75}Z"
+    fill="rgba(180,100,30,0.25)"/>`;
+}
+
+function buildTree(h, fillColor, shadowColor, variant) {
+  const w = Math.round(h * 0.42);
+  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;flex-shrink:0">
+    ${crownPath(w, h, variant, fillColor, shadowColor)}
+    ${makeTrunk(w, h)}
+  </svg>`;
+  return svg;
+}
+
+function buildForest() {
+  // Layer config: id, count, heightRange, fillColor, shadowColor, gap, zOffset
+  const layers = [
+    // Layer 1: farthest – tiny, misty blue-green, very transparent
+    { id:'fl1', count:11, hR:[80,130],  fill:'#0E3B28', shad:'#061A10', opacity:0.30, gap:'-4px' },
+    // Layer 2: far – small, medium blue-green
+    { id:'fl2', count:11, hR:[130,200], fill:'#124A32', shad:'#071E14', opacity:0.45, gap:'-6px' },
+    // Layer 3: mid – medium, brighter green
+    { id:'fl3', count:10, hR:[200,290], fill:'#1A6140', shad:'#0C2B1C', opacity:0.62, gap:'-8px' },
+    // Layer 4: near – tall, rich green
+    { id:'fl4', count:9,  hR:[280,400], fill:'#236B42', shad:'#102E1C', opacity:0.80, gap:'-10px' },
+    // Layer 5: foreground – very dark, closest, overlaps UI edges
+    { id:'fl5', count:7,  hR:[200,340], fill:'#122A18', shad:'#071410', opacity:1.00, gap:'-14px' },
+  ];
+
+  layers.forEach((layer, li) => {
+    const el = document.getElementById(layer.id);
+    if (!el) { console.warn('Missing layer:', layer.id); return; }
+    el.style.display = 'flex';
+    el.style.alignItems = 'flex-end';
+    el.style.justifyContent = 'space-between';
+    el.style.width = '100%';
+    el.style.opacity = layer.opacity;
+    // Mix 4 tree variants across each layer
+    for (let i = 0; i < layer.count; i++) {
+      const h = layer.hR[0] + Math.random() * (layer.hR[1] - layer.hR[0]);
+      const variant = (li + i * 2 + Math.floor(Math.random()*2)) % 4;
+      const div = document.createElement('div');
+      div.style.marginRight = layer.gap;
+      div.style.flexShrink = '0';
+      div.innerHTML = buildTree(Math.round(h), layer.fill, layer.shad, variant);
+      el.appendChild(div);
+    }
+  });
+
+  // Light rays
+  const raysEl = document.getElementById('fRays');
+  if (raysEl) {
+    const rconf = [
+      { pct:28, rot:-24, w:2, op:0.10, dur:8,  del:0   },
+      { pct:36, rot:-14, w:2, op:0.07, dur:6,  del:1.3 },
+      { pct:44, rot:-5,  w:4, op:0.15, dur:10, del:0.5 },
+      { pct:50, rot:0,   w:6, op:0.20, dur:12, del:0.8 },
+      { pct:56, rot:5,   w:4, op:0.15, dur:10, del:1.8 },
+      { pct:64, rot:14,  w:2, op:0.07, dur:7,  del:0.3 },
+      { pct:72, rot:24,  w:2, op:0.10, dur:9,  del:2.1 },
+    ];
+    rconf.forEach(r => {
+      const ray = document.createElement('div');
+      ray.style.cssText = `position:absolute;top:0;left:${r.pct}%;width:${r.w}px;height:65%;transform-origin:top center;transform:rotate(${r.rot}deg);background:linear-gradient(180deg,rgba(244,210,100,${r.op}) 0%,rgba(232,160,30,${r.op*0.5}) 50%,transparent 100%);border-radius:99px;animation:rayAnim ${r.dur}s ease-in-out ${r.del}s infinite`;
+      raysEl.appendChild(ray);
+    });
+  }
+
+  // Floating particles (fireflies/leaves)
+  const partEl = document.getElementById('fParticles');
+  if (partEl) {
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      const sz = 2 + Math.random() * 3;
+      const dur = 8 + Math.random() * 14;
+      const del = Math.random() * 16;
+      const x = 5 + Math.random() * 90;
+      const drift = (Math.random() - 0.5) * 120;
+      const isLeaf = Math.random() > 0.5;
+      p.style.cssText = `position:absolute;left:${x}%;top:${10+Math.random()*60}%;width:${sz}px;height:${sz}px;border-radius:${isLeaf?'40% 0':'50%'};background:rgba(${isLeaf?'140,190,80':'244,210,80'},${0.3+Math.random()*0.4});animation:partFloat ${dur}s ease-in-out ${del}s infinite;--drift:${drift}px`;
+      partEl.appendChild(p);
+    }
+  }
+}
+
+// Parallax on mouse move
+(function() {
+  var ticking = false;
+  document.addEventListener('mousemove', function(e) {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      var cx = (e.clientX / window.innerWidth - 0.5);
+      var cy = (e.clientY / window.innerHeight - 0.5) * 0.4;
+      var layers = [
+        {id:'fl1', sx:3,  sy:1},
+        {id:'fl2', sx:6,  sy:2},
+        {id:'fl3', sx:11, sy:3},
+        {id:'fl4', sx:17, sy:5},
+        {id:'fl5', sx:24, sy:7},
+      ];
+      layers.forEach(function(l) {
+        var el = document.getElementById(l.id);
+        if (el) el.style.transform = 'translate('+(cx*l.sx)+'px,'+(cy*l.sy)+'px)';
+      });
+      ticking = false;
+    });
+  }, {passive:true});
+})();
+
+
+// Init
+buildForest();
+render();
+if(Notification.permission==='granted'){
+  var nb=document.getElementById('notifBtn');
+  if(nb){nb.textContent='✓ Aktívne';nb.classList.add('ok');nb.disabled=true;}
+  schedNotif();
+}
+var now2=new Date();
+document.getElementById('timeEl').textContent=now2.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
+setInterval(function(){
+  var e=document.getElementById('timeEl');
+  if(e){var n=new Date();e.textContent=n.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});}
+},30000);
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").then(()=>console.log("SW OK")).catch(e=>console.error(e));}</script></body>
+</html>
+
